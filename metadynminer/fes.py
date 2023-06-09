@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from tqdm import tqdm
-from typing import Optional
+from typing import Optional, List
 from matplotlib import colormaps as cm
 from .hills import Hills
 
@@ -38,11 +38,11 @@ class Fes:
 
     def __init__(
             self,
-            hills: Hills, 
+            hills, 
             resolution=256, 
             original=False,
             calculate_new_fes=True,
-            cv_select: Optional[list[int]] = None, 
+            cv_select: Optional[List[int]] = None, 
             cv1range=None, 
             cv2range=None, 
             cv3range=None,
@@ -136,14 +136,13 @@ class Fes:
 
             if calculate_new_fes:
                 if not original:
-                    self.makefes(resolution, cv1range, cv2range,
-                                 cv3range, time_min, time_max)
+                    self.makefes(resolution)
                 else:
                     self.makefes2(resolution, cv1range, cv2range,
                                   cv3range, time_min, time_max)
 
-    def makefes_new(
-            self, time_min, time_max, resolution: Optional[int], cv_range=None, cv_indexes=None
+    def makefes(
+            self, resolution: Optional[int], cv_range=None, cv_indexes=None
         ):
         """
         Function used internally for summing hills in Hills object with the fast Bias Sum Algorithm. 
@@ -158,60 +157,14 @@ class Fes:
             cv_min = np.array([self.hills.cv_min[cv_index] for cv_index in cv_indexes])
             cv_max = np.array([self.hills.cv_max[cv_index] for cv_index in cv_indexes])
             cv_range = self.hills.cv_max - self.hills.cv_min
-            cv_min -= cv_range * 0.15
-            cv_max += cv_range * 0.15
-        else:
-            cv_min = cv_range[0]
-            cv_max = cv_range[1]
-            self.cv_range = cv_range
-        cv_fes_range = cv_max-cv_min
-
-        cv_bins = np.array([np.ceil(
-            (self.hills.cv[:, cv_index] - cv_min) * self.res / cv_fes_range
-        ) for cv_index in cv_indexes])
-        cvs = len(cv_indexes)
-        cv_bins = cv_bins.astype(int)
-        sigma = np.array([self.hills.sigma[cv_index][0] for cv_index in cv_indexes])
-        sigma_res = (sigma * self.res) / (cv_max - cv_min)
-
-        gauss_res = np.max((8 * sigma_res).astype(int))
-        if gauss_res % 2 == 0:
-            gauss_res += 1
-        
-        gauss_center_to_end = int((gauss_res - 1) / 2)
-        gauss_center = gauss_center_to_end + 1
-        grids = np.meshgrid(*[np.arange(gauss_res)] * cvs)
-        exponent = 0
-        for i in range(len(sigma_res)):
-            i_diff = (grids[i] + 1) - gauss_center
-            exponent += -(i_diff ** 2) / (2 * sigma_res[i] ** 2)
-        gauss = -np.exp(exponent)
-        
-
-        fes = np.zeros((resolution))
-
-    def makefes_new(
-            self, time_min, time_max, resolution, cv_range=None, cv_indexes=None
-        ):
-        """
-        Function used internally for summing hills in Hills object with the fast Bias Sum Algorithm. 
-        """
-        if resolution == None:
-            resolution = self.res
-
-        if cv_indexes == None:
-            cv_indexes = list(range(self.cvs))
-        
-        if cv_range == None:
-            cv_min = np.array([self.hills.cv_min[cv_index] for cv_index in cv_indexes])
-            cv_max = np.array([self.hills.cv_max[cv_index] for cv_index in cv_indexes])
-            cv_range = self.hills.cv_max - self.hills.cv_min
-            cv_min -= cv_range * 0.15
-            cv_max += cv_range * 0.15
         else:
             cv_min = np.array([cv_range[0] for cv_index in cv_indexes])
             cv_max = np.array([cv_range[1] for cv_index in cv_indexes])
             self.cv_range = cv_range
+        for cv_index in cv_indexes:
+            if not self.periodic[cv_index]:
+                cv_min[cv_index] -= cv_min[cv_index] * 0.15
+                cv_max[cv_index] += cv_min[cv_index] * 0.15
         cv_fes_range = cv_max - cv_min
 
         cv_bins = np.array([np.ceil(
@@ -219,17 +172,18 @@ class Fes:
         ) for cv_index in cv_indexes])
         cvs = len(cv_indexes)
         cv_bins = cv_bins.astype(int)
+        print(cv_bins)
         sigma = np.array([self.hills.sigma[cv_index][0] for cv_index in cv_indexes])
         sigma_res = (sigma * self.res) / (cv_max - cv_min)
 
         gauss_res = np.max((8 * sigma_res).astype(int))
         if gauss_res % 2 == 0:
             gauss_res += 1
-        
+    
         gauss_center_to_end = int((gauss_res - 1) / 2)
         gauss_center = gauss_center_to_end + 1
         grids = np.meshgrid(*[np.arange(gauss_res)] * cvs)
-        exponent = 0
+        exponent = 0.
         for i in range(len(sigma_res)):
             i_diff = (grids[i] + 1) - gauss_center
             exponent += -(i_diff ** 2) / (2 * sigma_res[i] ** 2)
@@ -237,510 +191,33 @@ class Fes:
         
         fes = np.zeros([resolution] * cvs)
         for line in tqdm(range(len(cv_bins[0]))):
-            fes_to_edit = []
-            gauss_crop = []
-            fes_crop = []
-
+            fes_index_to_edit = np.meshgrid(
+                *([
+                    np.arange(gauss_res) - gauss_center
+                ] * len(cv_bins[:, line]))
+            )
             for d in range(cvs):
-                fes_to_edit_d = [cv_bins[d][line] - 1 - gauss_center_to_end, cv_bins[d][line] - 1 + gauss_center_to_end]
-                fes_crop_d = [max(0, fes_to_edit_d[0]), min(resolution - 1, fes_to_edit_d[1])]
-                gauss_crop_d = [
-                    max(0, gauss_center_to_end - (cv_bins[d][line] - 1)),
-                    gauss_res - 1 - max(0, (cv_bins[d][line] - 1) + gauss_center_to_end - resolution + 1)
-                ]
-
-                fes_to_edit.append(fes_to_edit_d)
-                fes_crop.append(fes_crop_d)
-                gauss_crop.append(gauss_crop_d)
-
-            fes[tuple(slice(fes_crop[d][0], fes_crop[d][1] + 1) for d in range(cvs))] += gauss[
-                tuple(slice(gauss_crop[d][0], gauss_crop[d][1] + 1) for d in range(cvs))] * self.heights[line]
-
-            for d in range(cvs):
+                fes_index_to_edit[d] += cv_bins[d][line]
                 if self.periodic[d]:
-                    fes_crop_p = []
-                    gauss_crop_p = []
-
-                    for d_2 in range(cvs):
-                        if d_2 == d:
-                            fes_crop_p.append([resolution - 1 + (cv_bins[d][line] - gauss_center_to_end),
-                                               resolution - 1])
-                            gauss_crop_p.append([0, gauss_center_to_end - cv_bins[d][line]])
-                        else:
-                            fes_crop_p.append(fes_crop[d_2])
-                            gauss_crop_p.append(gauss_crop[d_2])
-
-                    fes[tuple(slice(fes_crop_p[d][0], fes_crop_p[d][1] + 1) for d in range(cvs))] += gauss[
-                        tuple(slice(gauss_crop_p[d][0], gauss_crop_p[d][1] + 1) for d in range(cvs))] * self.heights[line]
+                    # make sure that the index is in the range of the fes
+                    fes_index_to_edit[d] = np.mod(fes_index_to_edit[d], resolution)
+                else:
+                    # clip the index to the range of the fes
+                    arr = fes_index_to_edit[d]
+                    fes_index_to_edit[d] = np.where(
+                        (arr >= 0) & (arr <= resolution - 1), arr, np.nan
+                    )
+                    fes_index_to_edit[d].astype(int)
+            
+            for gauss_idx in range(gauss_res ** cvs):
+                try:
+                    fes[tuple(fes_index_to_edit[d].item(gauss_idx) for d in range(cvs))] += \
+                        gauss.item(gauss_idx) * self.heights[line]
+                except IndexError as e:
+                    pass
         fes = fes - np.min(fes)
+        self.fes = np.array(fes)
         return fes
-
-    def makefes(self, resolution, cv1range, cv2range, cv3range, time_min, time_max):
-        """
-        Function used internally for summing hills in Hills object with the fast Bias Sum Algorithm. 
-        """
-        self.res = resolution
-        # if self.res % 2 == 0:
-        #    self.res += 1
-
-        if self.cvs == 1:
-            if cv1range == None:
-                if self.periodic[0]:
-                    cv1min = self.cv1per[0]
-                    cv1max = self.cv1per[1]
-                else:
-                    cv1min = self.cv1min
-                    cv1max = self.cv1max
-                    cv1range = self.cv1max-self.cv1min
-                    cv1min -= cv1range*0.15
-                    cv1max += cv1range*0.15
-            else:
-                cv1min = cv1range[0]
-                cv1max = cv1range[1]
-                self.cv1range = cv1range
-            cv1_fes_range = cv1max-cv1min
-
-            cv1bin = np.ceil((self.cv1-cv1min)*(self.res)/(cv1_fes_range))
-            cv1bin = cv1bin.astype(int)
-            s1res = (self.s1[0]*self.res)/(cv1max - cv1min)
-            self.cv1bin = cv1bin
-            gauss_res = 8*s1res
-            gauss_res = int(gauss_res)
-            if gauss_res % 2 == 0:
-                gauss_res += 1
-
-            gauss_center = int((gauss_res-1)/2)+1
-            gauss = np.zeros((gauss_res))
-            for i in range(gauss_res):
-                #dp2 = ((i+1)-gauss_center)**2/(2*s1res**2)
-                # if dp2 < 6.25:
-                #    gauss[int(i)] = -np.exp(-dp2) * 1.00193418799744762399 - 0.00193418799744762399
-                gauss[int(i)] = -np.exp(-((i+1)-gauss_center)**2/(2*s1res**2))
-
-            fes = np.zeros((self.res))
-
-            for line in range(len(cv1bin)):
-                if (line) % 500 == 0:
-                    print(
-                        f"Constructing free energy surface: {((line+1)/len(cv1bin)):.1%} finished", end="\r")
-
-                #fes_center = int((self.res-1)/2)
-                gauss_center_to_end = int((gauss_res-1)/2)
-
-                fes_to_edit_cv1 = [
-                    cv1bin[line]-1-gauss_center_to_end,
-                    cv1bin[line]-1+gauss_center_to_end
-                ]
-                fes_crop_cv1 = [
-                    max(0, fes_to_edit_cv1[0]), 
-                    min(self.res-1, fes_to_edit_cv1[1])
-                ]
-
-                gauss_crop_cv1 = [
-                    max(0, gauss_center_to_end-(cv1bin[line]-1)),
-                    gauss_res-1-max(0, (cv1bin[line]-1)+gauss_center_to_end-self.res+1)
-                ]
-
-                fes[fes_crop_cv1[0]:fes_crop_cv1[1]+1]\
-                    += gauss[gauss_crop_cv1[0]:gauss_crop_cv1[1]+1]\
-                    * self.heights[line]
-
-                if self.periodic[0]:
-                    if cv1bin[line] < gauss_center_to_end:
-                        fes_crop_cv1_p = [
-                            self.res-1+(cv1bin[line]-gauss_center_to_end), self.res-1]
-                        gauss_crop_cv1_p = [
-                            0, gauss_center_to_end-cv1bin[line]]
-                        fes[fes_crop_cv1_p[0]:fes_crop_cv1_p[1]+1]\
-                            += gauss[gauss_crop_cv1_p[0]:gauss_crop_cv1_p[1]+1]\
-                            * self.heights[line]
-
-                    if cv1bin[line] > (self.res-gauss_center_to_end):
-                        fes_crop_cv1_p = [
-                            0, gauss_center_to_end+cv1bin[line]-self.res-1]
-                        gauss_crop_cv1_p = [
-                            gauss_res-(gauss_center_to_end+cv1bin[line]-self.res), gauss_res-1]
-                        fes[fes_crop_cv1_p[0]:fes_crop_cv1_p[1]+1]\
-                            += gauss[gauss_crop_cv1_p[0]:gauss_crop_cv1_p[1]+1]\
-                            * self.heights[line]
-            print("\n")
-            fes = fes-np.min(fes)
-            self.fes = np.array(fes)
-
-        elif self.cvs == 2:
-            if cv1range == None:
-                if self.periodic[0]:
-                    cv1min = self.cv1per[0]
-                    cv1max = self.cv1per[1]
-                else:
-                    cv1min = self.cv1min
-                    cv1max = self.cv1max
-                    cv1range = self.cv1max-self.cv1min
-                    cv1min -= cv1range*0.15
-                    cv1max += cv1range*0.15
-            else:
-                cv1min = cv1range[0]
-                cv1max = cv1range[1]
-                self.cv1range = cv1range
-            cv1_fes_range = cv1max-cv1min
-
-            if cv2range == None:
-                if self.periodic[1]:
-                    cv2min = self.cv2per[0]
-                    cv2max = self.cv2per[1]
-                else:
-                    cv2min = self.cv2min
-                    cv2max = self.cv2max
-                    cv2range = self.cv2max-self.cv2min
-                    cv2min -= cv2range*0.15
-                    cv2max += cv2range*0.15
-            else:
-                cv2min = cv2range[0]
-                cv2max = cv2range[1]
-                self.cv2range = cv2range
-            cv2_fes_range = cv2max-cv2min
-
-            cv1bin = np.ceil((self.cv1-cv1min)*self.res/(cv1max-cv1min))
-            cv2bin = np.ceil((self.cv2-cv2min)*self.res/(cv2max-cv2min))
-
-            cv1bin = cv1bin.astype(int)
-            cv2bin = cv2bin.astype(int)
-
-            s1res = (self.s1[0]*self.res)/(cv1max - cv1min)
-            s2res = (self.s2[0]*self.res)/(cv2max - cv2min)
-
-            gauss_res = max(8*s1res, 8*s2res)
-            gauss_res = int(gauss_res)
-            if gauss_res % 2 == 0:
-                gauss_res += 1
-
-            gauss_center = int((gauss_res-1)/2)+1
-            gauss = np.zeros((gauss_res, gauss_res))
-            for i in range(gauss_res):
-                for j in range(gauss_res):
-                    gauss[int(i), int(j)] = -np.exp(-(((i+1)-gauss_center) **
-                                                      2/(2*s1res**2) + ((j+1)-gauss_center)**2/(2*s2res**2)))
-
-            fes = np.zeros((self.res, self.res))
-            for line in range(len(cv1bin)):
-                if (line) % 500 == 0:
-                    print(
-                        f"Constructing free energy surface: {((line+1)/len(cv1bin)):.1%} finished", end="\r")
-
-                #fes_center = int((self.res-1)/2)
-                gauss_center_to_end = int((gauss_res-1)/2)
-                #print(f"\ng_res: {gauss_res}, gauss_center_to_end: {gauss_center_to_end}")
-
-                fes_to_edit_cv1 = [cv1bin[line]-1-gauss_center_to_end,
-                                   cv1bin[line]-1+gauss_center_to_end]
-                fes_to_edit_cv2 = [cv2bin[line]-1-gauss_center_to_end,
-                                   cv2bin[line]-1+gauss_center_to_end]
-                fes_crop_cv1 = [max(0, fes_to_edit_cv1[0]), min(
-                    self.res-1, fes_to_edit_cv1[1])]
-                fes_crop_cv2 = [max(0, fes_to_edit_cv2[0]), min(
-                    self.res-1, fes_to_edit_cv2[1])]
-
-                gauss_crop_cv1 = [max(0, gauss_center_to_end-(cv1bin[line]-1)),
-                                  gauss_res-1-max(0, (cv1bin[line]-1)+gauss_center_to_end-self.res+1)]
-                gauss_crop_cv2 = [max(0, gauss_center_to_end-(cv2bin[line]-1)),
-                                  gauss_res-1-max(0, (cv2bin[line]-1)+gauss_center_to_end-self.res+1)]
-
-                fes[fes_crop_cv1[0]:fes_crop_cv1[1]+1, fes_crop_cv2[0]:fes_crop_cv2[1]+1]\
-                    += gauss[gauss_crop_cv1[0]:gauss_crop_cv1[1]+1, gauss_crop_cv2[0]:gauss_crop_cv2[1]+1]\
-                    * self.heights[line]
-
-                if self.periodic[0]:
-                    if cv1bin[line] < gauss_center_to_end:
-                        fes_crop_cv1_p = [
-                            self.res-1+(cv1bin[line]-gauss_center_to_end), self.res-1]
-                        gauss_crop_cv1_p = [
-                            0, gauss_center_to_end-cv1bin[line]]
-                        fes[fes_crop_cv1_p[0]:fes_crop_cv1_p[1]+1, fes_crop_cv2[0]:fes_crop_cv2[1]+1]\
-                            += gauss[gauss_crop_cv1_p[0]:gauss_crop_cv1_p[1]+1, gauss_crop_cv2[0]:gauss_crop_cv2[1]+1]\
-                            * self.heights[line]
-
-                    if cv1bin[line] > (self.res-gauss_center_to_end):
-                        fes_crop_cv1_p = [
-                            0, gauss_center_to_end+cv1bin[line]-self.res-1]
-                        gauss_crop_cv1_p = [
-                            gauss_res-(gauss_center_to_end+cv1bin[line]-self.res), gauss_res-1]
-                        fes[fes_crop_cv1_p[0]:fes_crop_cv1_p[1]+1, fes_crop_cv2[0]:fes_crop_cv2[1]+1]\
-                            += gauss[gauss_crop_cv1_p[0]:gauss_crop_cv1_p[1]+1, gauss_crop_cv2[0]:gauss_crop_cv2[1]+1]\
-                            * self.heights[line]
-
-                if self.periodic[1]:
-                    if cv2bin[line] < gauss_center_to_end:
-                        fes_crop_cv2_p = [
-                            self.res-1+(cv2bin[line]-gauss_center_to_end), self.res-1]
-                        gauss_crop_cv2_p = [
-                            0, gauss_center_to_end-cv2bin[line]]
-                        fes[fes_crop_cv1[0]:fes_crop_cv1[1]+1, fes_crop_cv2_p[0]:fes_crop_cv2_p[1]+1]\
-                            += gauss[gauss_crop_cv1[0]:gauss_crop_cv1[1]+1, gauss_crop_cv2_p[0]:gauss_crop_cv2_p[1]+1]\
-                            * self.heights[line]
-
-                    if cv2bin[line] > (self.res-gauss_center_to_end):
-                        fes_crop_cv2_p = [
-                            0, gauss_center_to_end+cv2bin[line]-self.res-1]
-                        gauss_crop_cv2_p = [
-                            gauss_res-(gauss_center_to_end+cv2bin[line]-self.res), gauss_res-1]
-                        fes[fes_crop_cv1[0]:fes_crop_cv1[1]+1, fes_crop_cv2_p[0]:fes_crop_cv2_p[1]+1]\
-                            += gauss[gauss_crop_cv1[0]:gauss_crop_cv1[1]+1, gauss_crop_cv2_p[0]:gauss_crop_cv2_p[1]+1]\
-                            * self.heights[line]
-
-                if self.periodic[0] and self.periodic[1]:
-                    if ((cv1bin[line] < gauss_center_to_end) or (cv1bin[line] > (self.res-gauss_center_to_end))) \
-                            and ((cv2bin[line] < gauss_center_to_end) or (cv2bin[line] > (self.res-gauss_center_to_end))):
-                        fes[fes_crop_cv1_p[0]:fes_crop_cv1_p[1]+1, fes_crop_cv2_p[0]:fes_crop_cv2_p[1]+1]\
-                            += gauss[gauss_crop_cv1_p[0]:gauss_crop_cv1_p[1]+1, gauss_crop_cv2_p[0]:gauss_crop_cv2_p[1]+1]\
-                            * self.heights[line]
-            print("\n")
-            fes = fes-np.min(fes)
-            self.fes = np.array(fes)
-        elif self.cvs == 3:
-            if cv1range == None:
-                if self.periodic[0]:
-                    cv1min = self.cv1per[0]
-                    cv1max = self.cv1per[1]
-                else:
-                    cv1min = self.cv1min
-                    cv1max = self.cv1max
-                    cv1range = self.cv1max-self.cv1min
-                    cv1min -= cv1range*0.15
-                    cv1max += cv1range*0.15
-            else:
-                cv1min = cv1range[0]
-                cv1max = cv1range[1]
-                self.cv1range = cv1range
-            cv1_fes_range = cv1max-cv1min
-
-            if cv2range == None:
-                if self.periodic[1]:
-                    cv2min = self.cv2per[0]
-                    cv2max = self.cv2per[1]
-                else:
-                    cv2min = self.cv2min
-                    cv2max = self.cv2max
-                    cv2range = self.cv2max-self.cv2min
-                    cv2min -= cv2range*0.15
-                    cv2max += cv2range*0.15
-            else:
-                cv2min = cv2range[0]
-                cv2max = cv2range[1]
-                self.cv2range = cv2range
-            cv2_fes_range = cv2max-cv2min
-
-            if cv1range == None:
-                if self.periodic[2]:
-                    cv3min = self.cv3per[0]
-                    cv3max = self.cv3per[1]
-                else:
-                    cv3min = self.cv3min
-                    cv3max = self.cv3max
-                    cv3range = self.cv3max-self.cv3min
-                    cv3min -= cv3range*0.15
-                    cv3max += cv3range*0.15
-            else:
-                cv3min = cv3range[0]
-                cv3max = cv3range[1]
-                self.cv3range = cv3range
-            cv3_fes_range = cv3max-cv3min
-
-            cv1bin = np.ceil((self.cv1-cv1min)*self.res/(cv1max-cv1min))
-            cv2bin = np.ceil((self.cv2-cv2min)*self.res/(cv2max-cv2min))
-            cv3bin = np.ceil((self.cv3-cv3min)*self.res/(cv3max-cv3min))
-
-            cv1bin = cv1bin.astype(int)
-            cv2bin = cv2bin.astype(int)
-            cv3bin = cv3bin.astype(int)
-
-            s1res = (self.s1[0]*self.res)/(cv1max - cv1min)
-            s2res = (self.s2[0]*self.res)/(cv2max - cv2min)
-            s3res = (self.s3[0]*self.res)/(cv3max - cv3min)
-
-            gauss_res = max(10*s1res, 10*s2res, 10*s3res)
-            gauss_res = int(gauss_res)
-            if gauss_res % 2 == 0:
-                gauss_res += 1
-            gauss_center = int((gauss_res-1)/2)+1
-            gauss = np.zeros((gauss_res, gauss_res, gauss_res))
-            for i in range(gauss_res):
-                for j in range(gauss_res):
-                    for k in range(gauss_res):
-                        #dp2 = ((i+1)-gauss_center)**2/(2*s1res**2) + ((j+1)-gauss_center)**2/(2*s2res**2) + ((k+1)-gauss_center)**2/(2*s3res**2)
-                        # if dp2 < 6.25:
-                        #    gauss[int(i), int(j), int(k)] = -np.exp(-dp2) * 1.00193418799744762399 - 0.00193418799744762399
-                        gauss[int(i), int(j), int(k)] = -np.exp(-(((i+1)-gauss_center)**2/(2*s1res**2) +
-                                                                  ((j+1)-gauss_center)**2/(2*s2res**2) +
-                                                                  ((k+1)-gauss_center)**2/(2*s3res**2)))
-
-            fes = np.zeros((self.res, self.res, self.res))
-
-            for line in range(len(cv1bin)):
-                if (line) % 500 == 0:
-                    print(
-                        f"Constructing free energy surface: {((line+1)/len(cv1bin)):.1%} finished", end="\r")
-
-                #fes_center = int((self.res-1)/2)
-                gauss_center_to_end = int((gauss_res-1)/2)
-
-                fes_to_edit_cv1 = [cv1bin[line]-1-gauss_center_to_end,
-                                   cv1bin[line]-1+gauss_center_to_end]
-                fes_to_edit_cv2 = [(cv2bin[line]-1)-gauss_center_to_end,
-                                   (cv2bin[line]-1)+gauss_center_to_end]
-                fes_to_edit_cv3 = [(cv3bin[line]-1)-gauss_center_to_end,
-                                   (cv3bin[line]-1)+gauss_center_to_end]
-                fes_crop_cv1 = [max(0, fes_to_edit_cv1[0]), min(
-                    self.res-1, fes_to_edit_cv1[1])]
-                fes_crop_cv2 = [max(0, fes_to_edit_cv2[0]), min(
-                    self.res-1, fes_to_edit_cv2[1])]
-                fes_crop_cv3 = [max(0, fes_to_edit_cv3[0]), min(
-                    self.res-1, fes_to_edit_cv3[1])]
-
-                gauss_crop_cv1 = [max(0, gauss_center_to_end-(cv1bin[line]-1)),
-                                  gauss_res-1-max(0, (cv1bin[line]-1)+gauss_center_to_end-self.res+1)]
-                gauss_crop_cv2 = [max(0, gauss_center_to_end-(cv2bin[line]-1)),
-                                  gauss_res-1-max(0, (cv2bin[line]-1)+gauss_center_to_end-self.res+1)]
-                gauss_crop_cv3 = [max(0, gauss_center_to_end-(cv3bin[line]-1)),
-                                  gauss_res-1-max(0, (cv3bin[line]-1)+gauss_center_to_end-self.res+1)]
-
-                fes[fes_crop_cv1[0]:fes_crop_cv1[1]+1,
-                    fes_crop_cv2[0]:fes_crop_cv2[1]+1,
-                    fes_crop_cv3[0]:fes_crop_cv3[1]+1]\
-                    += gauss[gauss_crop_cv1[0]:gauss_crop_cv1[1]+1,
-                             gauss_crop_cv2[0]:gauss_crop_cv2[1]+1,
-                             gauss_crop_cv3[0]:gauss_crop_cv3[1]+1]\
-                    * self.heights[line]
-
-                if self.periodic[0]:
-                    if cv1bin[line] < gauss_center_to_end:
-                        fes_crop_cv1_p = [
-                            self.res-1+(cv1bin[line]-gauss_center_to_end), self.res-1]
-                        gauss_crop_cv1_p = [
-                            0, gauss_center_to_end-cv1bin[line]]
-                        fes[fes_crop_cv1_p[0]:fes_crop_cv1_p[1]+1,
-                            fes_crop_cv2[0]:fes_crop_cv2[1]+1,
-                            fes_crop_cv3[0]:fes_crop_cv3[1]+1]\
-                            += gauss[gauss_crop_cv1_p[0]:gauss_crop_cv1_p[1]+1,
-                                     gauss_crop_cv2[0]:gauss_crop_cv2[1]+1,
-                                     gauss_crop_cv3[0]:gauss_crop_cv3[1]+1]\
-                            * self.heights[line]
-
-                    if cv1bin[line] > (self.res-gauss_center_to_end):
-                        fes_crop_cv1_p = [
-                            0, gauss_center_to_end+cv1bin[line]-self.res-1]
-                        gauss_crop_cv1_p = [
-                            gauss_res-(gauss_center_to_end+cv1bin[line]-self.res), gauss_res-1]
-                        fes[fes_crop_cv1_p[0]:fes_crop_cv1_p[1]+1,
-                            fes_crop_cv2[0]:fes_crop_cv2[1]+1,
-                            fes_crop_cv3[0]:fes_crop_cv3[1]+1]\
-                            += gauss[gauss_crop_cv1_p[0]:gauss_crop_cv1_p[1]+1,
-                                     gauss_crop_cv2[0]:gauss_crop_cv2[1]+1,
-                                     gauss_crop_cv3[0]:gauss_crop_cv3[1]+1]\
-                            * self.heights[line]
-
-                if self.periodic[1]:
-                    if cv2bin[line] < gauss_center_to_end:
-                        fes_crop_cv2_p = [
-                            self.res-1+(cv2bin[line]-gauss_center_to_end), self.res-1]
-                        gauss_crop_cv2_p = [
-                            0, gauss_center_to_end-cv2bin[line]]
-                        fes[fes_crop_cv1[0]:fes_crop_cv1[1]+1,
-                            fes_crop_cv2_p[0]:fes_crop_cv2_p[1]+1,
-                            fes_crop_cv3[0]:fes_crop_cv3[1]+1]\
-                            += gauss[gauss_crop_cv1[0]:gauss_crop_cv1[1]+1,
-                                     gauss_crop_cv2_p[0]:gauss_crop_cv2_p[1]+1,
-                                     gauss_crop_cv3[0]:gauss_crop_cv3[1]+1]\
-                            * self.heights[line]
-
-                    if cv2bin[line] > (self.res-gauss_center_to_end):
-                        fes_crop_cv2_p = [
-                            0, gauss_center_to_end+cv2bin[line]-self.res-1]
-                        gauss_crop_cv2_p = [
-                            gauss_res-(gauss_center_to_end+cv2bin[line]-self.res), gauss_res-1]
-                        fes[fes_crop_cv1[0]:fes_crop_cv1[1]+1,
-                            fes_crop_cv2_p[0]:fes_crop_cv2_p[1]+1,
-                            fes_crop_cv3[0]:fes_crop_cv3[1]+1]\
-                            += gauss[gauss_crop_cv1[0]:gauss_crop_cv1[1]+1,
-                                     gauss_crop_cv2_p[0]:gauss_crop_cv2_p[1]+1,
-                                     gauss_crop_cv3[0]:gauss_crop_cv3[1]+1]\
-                            * self.heights[line]
-                if self.periodic[2]:
-                    if cv3bin[line] < gauss_center_to_end:
-                        fes_crop_cv3_p = [
-                            self.res-1+(cv3bin[line]-gauss_center_to_end), self.res-1]
-                        gauss_crop_cv3_p = [
-                            0, gauss_center_to_end-cv3bin[line]]
-                        fes[fes_crop_cv1[0]:fes_crop_cv1[1]+1,
-                            fes_crop_cv2[0]:fes_crop_cv2[1]+1,
-                            fes_crop_cv3_p[0]:fes_crop_cv3_p[1]+1]\
-                            += gauss[gauss_crop_cv1[0]:gauss_crop_cv1[1]+1,
-                                     gauss_crop_cv2[0]:gauss_crop_cv2[1]+1,
-                                     gauss_crop_cv3_p[0]:gauss_crop_cv3_p[1]+1]\
-                            * self.heights[line]
-
-                    if cv3bin[line] > (self.res-gauss_center_to_end):
-                        fes_crop_cv3_p = [
-                            0, gauss_center_to_end+cv3bin[line]-self.res-1]
-                        gauss_crop_cv3_p = [
-                            gauss_res-(gauss_center_to_end+cv3bin[line]-self.res), gauss_res-1]
-                        fes[fes_crop_cv1[0]:fes_crop_cv1[1]+1,
-                            fes_crop_cv2[0]:fes_crop_cv2[1]+1,
-                            fes_crop_cv3_p[0]:fes_crop_cv3_p[1]+1]\
-                            += gauss[gauss_crop_cv1[0]:gauss_crop_cv1[1]+1,
-                                     gauss_crop_cv2[0]:gauss_crop_cv2[1]+1,
-                                     gauss_crop_cv3_p[0]:gauss_crop_cv3_p[1]+1]\
-                            * self.heights[line]
-
-                if self.periodic[0] and self.periodic[1]:
-                    if ((cv1bin[line] < gauss_center_to_end) or (cv1bin[line] > (self.res-gauss_center_to_end))) \
-                            and ((cv2bin[line] < gauss_center_to_end) or (cv2bin[line] > (self.res-gauss_center_to_end))):
-                        fes[fes_crop_cv1_p[0]:fes_crop_cv1_p[1]+1,
-                            fes_crop_cv2_p[0]:fes_crop_cv2_p[1]+1,
-                            fes_crop_cv3[0]:fes_crop_cv3[1]+1]\
-                            += gauss[gauss_crop_cv1_p[0]:gauss_crop_cv1_p[1]+1,
-                                     gauss_crop_cv2_p[0]:gauss_crop_cv2_p[1]+1,
-                                     gauss_crop_cv3[0]:gauss_crop_cv3[1]+1]\
-                            * self.heights[line]
-
-                if self.periodic[0] and self.periodic[2]:
-                    if ((cv1bin[line] < gauss_center_to_end) or (cv1bin[line] > (self.res-gauss_center_to_end))) \
-                            and ((cv3bin[line] < gauss_center_to_end) or (cv3bin[line] > (self.res-gauss_center_to_end))):
-                        fes[fes_crop_cv1_p[0]:fes_crop_cv1_p[1]+1,
-                            fes_crop_cv2[0]:fes_crop_cv2[1]+1,
-                            fes_crop_cv3_p[0]:fes_crop_cv3_p[1]+1]\
-                            += gauss[gauss_crop_cv1_p[0]:gauss_crop_cv1_p[1]+1,
-                                     gauss_crop_cv2[0]:gauss_crop_cv2[1]+1,
-                                     gauss_crop_cv3_p[0]:gauss_crop_cv3_p[1]+1]\
-                            * self.heights[line]
-
-                if self.periodic[1] and self.periodic[2]:
-                    if ((cv2bin[line] < gauss_center_to_end) or (cv2bin[line] > (self.res-gauss_center_to_end))) \
-                            and ((cv3bin[line] < gauss_center_to_end) or (cv3bin[line] > (self.res-gauss_center_to_end))):
-                        fes[fes_crop_cv1[0]:fes_crop_cv1[1]+1,
-                            fes_crop_cv2_p[0]:fes_crop_cv2_p[1]+1,
-                            fes_crop_cv3_p[0]:fes_crop_cv3_p[1]+1]\
-                            += gauss[gauss_crop_cv1[0]:gauss_crop_cv1[1]+1,
-                                     gauss_crop_cv2_p[0]:gauss_crop_cv2_p[1]+1,
-                                     gauss_crop_cv3_p[0]:gauss_crop_cv3_p[1]+1]\
-                            * self.heights[line]
-
-                if self.periodic[0] and self.periodic[1] and self.periodic[2]:
-                    if ((cv1bin[line] < gauss_center_to_end) or (cv1bin[line] > (self.res-gauss_center_to_end)))\
-                            and ((cv2bin[line] < gauss_center_to_end) or (cv2bin[line] > (self.res-gauss_center_to_end))) \
-                            and ((cv3bin[line] < gauss_center_to_end) or (cv3bin[line] > (self.res-gauss_center_to_end))):
-                        fes[fes_crop_cv1_p[0]:fes_crop_cv1_p[1]+1,
-                            fes_crop_cv2_p[0]:fes_crop_cv2_p[1]+1,
-                            fes_crop_cv3_p[0]:fes_crop_cv3_p[1]+1]\
-                            += gauss[gauss_crop_cv1_p[0]:gauss_crop_cv1_p[1]+1,
-                                     gauss_crop_cv2_p[0]:gauss_crop_cv2_p[1]+1,
-                                     gauss_crop_cv3_p[0]:gauss_crop_cv3_p[1]+1]\
-                            * self.heights[line]
-
-            print("\n")
-            fes = fes-np.min(fes)
-            self.fes = np.array(fes)
-        else:
-            print("Fes object doesn't have supported number of CVs.")
 
     def makefes2(self, resolution, cv1range, cv2range, cv3range, time_min, time_max):
         """

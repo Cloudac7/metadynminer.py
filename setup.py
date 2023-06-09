@@ -12,7 +12,7 @@ setup(
     install_requires=['numpy>=1.23.5',
                       'matplotlib>=3.7.1',
                       'pandas>=1.5.3',
-                      'pyvista>=0.38.5'
+                      # 'pyvista>=0.38.5'
                       ],
 
     classifiers=[

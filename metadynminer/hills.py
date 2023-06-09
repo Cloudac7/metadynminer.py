@@ -1,4 +1,5 @@
 import numpy as np
+from typing import Optional, Tuple, List
 
 class Hills:
     """
@@ -32,7 +33,7 @@ class Hills:
             encoding="utf8", 
             ignoretime=True, 
             periodic=None, 
-            cv_per=([-np.pi, np.pi]),
+            cv_per: Optional[List[List[float]]] = None,
             timestep=None
     ):
         self.read(
@@ -46,7 +47,7 @@ class Hills:
             encoding="utf8", 
             ignoretime=True, 
             periodic=None, 
-            cv_per=([-np.pi, np.pi]),
+            cv_per: Optional[List[List[float]]] = None,
             timestep=None
     ):
         with open(name, 'r', encoding=encoding) as hills_file:
@@ -70,6 +71,10 @@ class Hills:
         for i in range(self.cvs):
             flag = 0
             if self.periodic[i]:
+                if self.cv_per == None:
+                    raise ValueError(
+                        "cv_per has to be provided for each periodic CV"
+                    )
                 try:
                     self.cv_min[i] = self.cv_per[flag][0]
                     self.cv_max[i] = self.cv_per[flag][1]

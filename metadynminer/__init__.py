@@ -54,11 +54,7 @@ try:
 except:
     print("Error while loading pandas")
     exit()
-try:
-    import pyvista as pv
-except:
-    print("Error while loading pyvista")
-    exit()
+
 
   
 class Minima():
