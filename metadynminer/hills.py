@@ -59,7 +59,7 @@ class Hills:
 
         if periodic == None:
             periodic = [False for i in range(self.cvs)]
-        self.periodic = periodic[:self.cvs]
+        self.periodic = np.array(periodic[:self.cvs], dtype=bool)
 
         self.cv_per = cv_per
         

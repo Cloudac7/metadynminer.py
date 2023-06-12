@@ -1,10 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from tqdm import tqdm
+from tqdm import tqdm, trange
 from typing import Optional, List
 from matplotlib import colormaps as cm
-from .hills import Hills
+
+from metadynminer.hills import Hills
 
 
 class Fes:
@@ -141,30 +142,25 @@ class Fes:
                     self.makefes2(resolution, cv1range, cv2range,
                                   cv3range, time_min, time_max)
 
-    def makefes(
-            self, resolution: Optional[int], cv_range=None, cv_indexes=None
-        ):
-        """
-        Function used internally for summing hills in Hills object with the fast Bias Sum Algorithm. 
-        """
-        if resolution == None:
+    def makefes(self, resolution: Optional[int], cv_range=None, cv_indexes=None):
+        if resolution is None:
             resolution = self.res
 
-        if cv_indexes == None:
-            cv_indexes = list(range(self.cvs))
-        
-        if cv_range == None:
-            cv_min = np.array([self.hills.cv_min[cv_index] for cv_index in cv_indexes])
-            cv_max = np.array([self.hills.cv_max[cv_index] for cv_index in cv_indexes])
+        if cv_indexes is None:
+            cv_indexes = np.arange(self.cvs)
+
+        if cv_range is None:
+            cv_min = self.hills.cv_min[cv_indexes]
+            cv_max = self.hills.cv_max[cv_indexes]
             cv_range = self.hills.cv_max - self.hills.cv_min
         else:
-            cv_min = np.array([cv_range[0] for cv_index in cv_indexes])
-            cv_max = np.array([cv_range[1] for cv_index in cv_indexes])
+            cv_min = np.full(len(cv_indexes), cv_range[0])
+            cv_max = np.full(len(cv_indexes), cv_range[1])
             self.cv_range = cv_range
-        for cv_index in cv_indexes:
-            if not self.periodic[cv_index]:
-                cv_min[cv_index] -= cv_min[cv_index] * 0.15
-                cv_max[cv_index] += cv_min[cv_index] * 0.15
+
+        cv_min[~self.periodic[cv_indexes]] -= cv_min[~self.periodic[cv_indexes]] * 0.15
+        cv_max[~self.periodic[cv_indexes]] += cv_min[~self.periodic[cv_indexes]] * 0.15
+
         cv_fes_range = cv_max - cv_min
 
         cv_bins = np.array([np.ceil(
@@ -172,7 +168,7 @@ class Fes:
         ) for cv_index in cv_indexes])
         cvs = len(cv_indexes)
         cv_bins = cv_bins.astype(int)
-        print(cv_bins)
+
         sigma = np.array([self.hills.sigma[cv_index][0] for cv_index in cv_indexes])
         sigma_res = (sigma * self.res) / (cv_max - cv_min)
 
@@ -188,35 +184,32 @@ class Fes:
             i_diff = (grids[i] + 1) - gauss_center
             exponent += -(i_diff ** 2) / (2 * sigma_res[i] ** 2)
         gauss = -np.exp(exponent)
-        
+
         fes = np.zeros([resolution] * cvs)
-        for line in tqdm(range(len(cv_bins[0]))):
+        for line in trange(len(cv_bins[0]), desc="Constructing FES"):
+            # create a meshgrid of the indexes of the fes that need to be edited
+            # size of the meshgrid is the same as the size of the gauss
             fes_index_to_edit = np.meshgrid(
                 *([
                     np.arange(gauss_res) - gauss_center
                 ] * len(cv_bins[:, line]))
             )
+
+            # create a mask to avoid editing indexes outside the fes
+            local_mask = np.ones_like(gauss, dtype=int)
             for d in range(cvs):
                 fes_index_to_edit[d] += cv_bins[d][line]
-                if self.periodic[d]:
-                    # make sure that the index is in the range of the fes
-                    fes_index_to_edit[d] = np.mod(fes_index_to_edit[d], resolution)
-                else:
-                    # clip the index to the range of the fes
-                    arr = fes_index_to_edit[d]
-                    fes_index_to_edit[d] = np.where(
-                        (arr >= 0) & (arr <= resolution - 1), arr, np.nan
-                    )
-                    fes_index_to_edit[d].astype(int)
-            
-            for gauss_idx in range(gauss_res ** cvs):
-                try:
-                    fes[tuple(fes_index_to_edit[d].item(gauss_idx) for d in range(cvs))] += \
-                        gauss.item(gauss_idx) * self.heights[line]
-                except IndexError as e:
-                    pass
+                if not self.periodic[d]:
+                    mask = np.where(
+                        (fes_index_to_edit[d] < 0) & (fes_index_to_edit[d] > resolution - 1)
+                    )[0]
+                    # if the cv is not periodic, remove the indexes outside the fes
+                    local_mask[mask] = 0
+                # make sure the indexes are inside the fes
+                fes_index_to_edit[d] = np.mod(fes_index_to_edit[d], resolution)
+            fes[tuple(fes_index_to_edit)] += gauss * local_mask * self.heights[line]
         fes = fes - np.min(fes)
-        self.fes = np.array(fes)
+        self.fes = fes
         return fes
 
     def makefes2(self, resolution, cv1range, cv2range, cv3range, time_min, time_max):
@@ -250,12 +243,7 @@ class Fes:
             progress = 0
             max_progress = self.res ** self.cvs
 
-            for x in range(self.res):
-                progress += 1
-                if (progress) % 200 == 0:
-                    print(
-                        f"Constructing free energy surface: {(progress/max_progress):.2%} finished", end="\r")
-
+            for x in trange(self.res, desc="Constructing FES"):
                 dist_cv1 = self.cv1-(cv1min+(x)*cv1_fes_range/(self.res))
                 if self.periodic[0]:
                     dist_cv1[dist_cv1 < -0.5*cv1_fes_range] += cv1_fes_range
@@ -311,21 +299,13 @@ class Fes:
 
             fes = np.zeros((self.res, self.res))
 
-            progress = 0
-            max_progress = self.res ** self.cvs
-
-            for x in range(self.res):
+            for x in trange(self.res, desc="Constructing FES", leave=None):
                 dist_cv1 = self.cv1-(cv1min+(x)*cv1_fes_range/(self.res))
                 if self.periodic[0]:
                     dist_cv1[dist_cv1 < -0.5*cv1_fes_range] += cv1_fes_range
                     dist_cv1[dist_cv1 > +0.5*cv1_fes_range] -= cv1_fes_range
 
                 for y in range(self.res):
-                    progress += 1
-                    if (progress) % 200 == 0:
-                        print(
-                            f"Constructing free energy surface: {(progress/max_progress):.2%} finished", end="\r")
-
                     dist_cv2 = self.cv2-(cv2min+(y)*cv2_fes_range/(self.res))
                     if self.periodic[1]:
                         dist_cv2[dist_cv2 < -0.5 *
@@ -343,7 +323,6 @@ class Fes:
 
             fes = fes - np.min(fes)
             self.fes = np.array(fes)
-            print("\n")
 
         elif self.cvs == 3:
             if cv1range == None:
@@ -402,10 +381,7 @@ class Fes:
 
             fes = np.zeros((self.res, self.res, self.res))
 
-            progress = 0
-            max_progress = self.res ** self.cvs
-
-            for x in range(self.res):
+            for x in trange(self.res, desc="Constructing FES"):
                 dist_cv1 = self.cv1-(cv1min+(x)*cv1_fes_range/(self.res))
                 if self.periodic[0]:
                     dist_cv1[dist_cv1 < -0.5*cv1_fes_range] += cv1_fes_range
@@ -420,11 +396,6 @@ class Fes:
                                  cv2_fes_range] -= cv2_fes_range
 
                     for z in range(self.res):
-                        progress += 1
-                        if (progress) % 200 == 0:
-                            print(
-                                f"Constructing free energy surface: {(progress/max_progress):.2%} finished", end="\r")
-
                         dist_cv3 = self.cv3 - \
                             (cv3min+(z)*cv3_fes_range/(self.res))
                         if self.periodic[2]:
@@ -443,7 +414,6 @@ class Fes:
 
             fes = fes - np.min(fes)
             self.fes = np.array(fes)
-            print("\n")
         else:
             print(f"Error: unsupported number of CVs: {self.cvs}.")
 
