@@ -139,8 +139,7 @@ class Fes:
                 if not original:
                     self.makefes(resolution)
                 else:
-                    self.makefes2(resolution, cv1range, cv2range,
-                                  cv3range, time_min, time_max)
+                    self.makefes2(resolution)
 
     def makefes(self, resolution: Optional[int], cv_range=None, cv_indexes=None):
         if resolution is None:
@@ -212,210 +211,56 @@ class Fes:
         self.fes = fes
         return fes
 
-    def makefes2(self, resolution, cv1range, cv2range, cv3range, time_min, time_max):
+    def makefes2(self, resolution: Optional[int], cv_range=None, cv_indexes=None):
         """
         Function internally used to sum Hills in the same way as Plumed sum_hills. 
         """
 
-        self.res = resolution
+        if resolution is None:
+            resolution = self.res
 
-        if self.cvs == 1:
-            if cv1range == None:
-                if self.periodic[0]:
-                    cv1min = self.cv1per[0]
-                    cv1max = self.cv1per[1]
-                    cv1_fes_range = np.abs(self.cv1per[1]-self.cv1per[0])
-                else:
-                    cv1range = self.cv1max-self.cv1min
-                    cv1min = self.cv1min
-                    cv1max = self.cv1max
-                    cv1min -= cv1range*0.15
-                    cv1max += cv1range*0.15
-                    cv1_fes_range = cv1max - cv1min
-            else:
-                cv1min = cv1range[0]
-                cv1max = cv1range[1]
-                self.cv1range = cv1range
-                cv1_fes_range = cv1max-cv1min
+        if cv_indexes is None:
+            cv_indexes = np.arange(self.cvs)
 
-            fes = np.zeros((self.res))
+        if cv_range is None:
+            cv_min = self.hills.cv_min[cv_indexes]
+            cv_max = self.hills.cv_max[cv_indexes]
+            cv_range = self.hills.cv_max - self.hills.cv_min
+        else:
+            cv_min = np.full(len(cv_indexes), cv_range[0])
+            cv_max = np.full(len(cv_indexes), cv_range[1])
+            self.cv_range = cv_range
 
-            progress = 0
-            max_progress = self.res ** self.cvs
+        cv_min[~self.periodic[cv_indexes]] -= cv_min[~self.periodic[cv_indexes]] * 0.15
+        cv_max[~self.periodic[cv_indexes]] += cv_min[~self.periodic[cv_indexes]] * 0.15
 
-            for x in trange(self.res, desc="Constructing FES"):
-                dist_cv1 = self.cv1-(cv1min+(x)*cv1_fes_range/(self.res))
-                if self.periodic[0]:
-                    dist_cv1[dist_cv1 < -0.5*cv1_fes_range] += cv1_fes_range
-                    dist_cv1[dist_cv1 > +0.5*cv1_fes_range] -= cv1_fes_range
+        cv_fes_range = cv_max - cv_min
+        cvs = len(cv_indexes)
+        fes = np.zeros([resolution] * cvs)
+        time_limit = self.hills.cv[:, 0].shape[0]
 
-                dp2 = dist_cv1**2/(2*self.s1**2)
-                tmp = np.zeros(self.cv1.shape)
-                tmp[dp2 < 6.25] = self.heights[dp2 < 6.25] * \
+        for index in tqdm(np.ndindex(fes.shape), # type: ignore
+                          desc="Constructing FES",
+                          total=np.prod(fes.shape)): # type: ignore
+            dp2_array = np.zeros([cvs, time_limit])
+            for i, cv_idx in enumerate(cv_indexes):
+                dist_cv = \
+                    self.hills.cv[:, cv_idx] - (cv_min[i] + index[i] * cv_fes_range[i] / resolution)
+                if self.periodic[cv_idx]:
+                    dist_cv[dist_cv < -0.5*cv_fes_range[i]] += cv_fes_range[i]
+                    dist_cv[dist_cv > +0.5*cv_fes_range[i]] -= cv_fes_range[i]
+                dp2_local = dist_cv ** 2 / (2 * self.hills.sigma[cv_idx][0] ** 2)
+                dp2_array[i] = dp2_local
+            dp2 = np.sum(dp2_array, axis=0)
+
+            tmp = np.zeros(self.cv1.shape)
+            tmp[dp2 < 6.25] = self.heights[dp2 < 6.25] * \
                     (np.exp(-dp2[dp2 < 6.25]) *
                      1.00193418799744762399 - 0.00193418799744762399)
-                fes[x] = -tmp.sum()
+            fes[index] = -tmp.sum()
 
-            fes = fes - np.min(fes)
-            self.fes = np.array(fes)
-            print("\n")
-
-        elif self.cvs == 2:
-            if cv1range == None:
-                if self.periodic[0]:
-                    cv1min = self.cv1per[0]
-                    cv1max = self.cv1per[1]
-                    cv1_fes_range = np.abs(self.cv1per[1]-self.cv1per[0])
-                else:
-                    cv1range = self.cv1max-self.cv1min
-                    cv1min = self.cv1min
-                    cv1max = self.cv1max
-                    cv1min -= cv1range*0.15
-                    cv1max += cv1range*0.15
-                    cv1_fes_range = cv1max - cv1min
-            else:
-                cv1min = cv1range[0]
-                cv1max = cv1range[1]
-                self.cv1range = cv1range
-                cv1_fes_range = cv1max-cv1min
-
-            if cv2range == None:
-                if self.periodic[1]:
-                    cv2min = self.cv2per[0]
-                    cv2max = self.cv2per[1]
-                    cv2_fes_range = np.abs(self.cv2per[1]-self.cv2per[0])
-                else:
-                    cv2range = self.cv2max-self.cv2min
-                    cv2min = self.cv2min
-                    cv2max = self.cv2max
-                    cv2min -= cv2range*0.15
-                    cv2max += cv2range*0.15
-                    cv2_fes_range = cv2max - cv2min
-            else:
-                cv2min = cv2range[0]
-                cv2max = cv2range[1]
-                self.cv2range = cv2range
-                cv2_fes_range = cv2max-cv2min
-
-            fes = np.zeros((self.res, self.res))
-
-            for x in trange(self.res, desc="Constructing FES", leave=None):
-                dist_cv1 = self.cv1-(cv1min+(x)*cv1_fes_range/(self.res))
-                if self.periodic[0]:
-                    dist_cv1[dist_cv1 < -0.5*cv1_fes_range] += cv1_fes_range
-                    dist_cv1[dist_cv1 > +0.5*cv1_fes_range] -= cv1_fes_range
-
-                for y in range(self.res):
-                    dist_cv2 = self.cv2-(cv2min+(y)*cv2_fes_range/(self.res))
-                    if self.periodic[1]:
-                        dist_cv2[dist_cv2 < -0.5 *
-                                 cv2_fes_range] += cv2_fes_range
-                        dist_cv2[dist_cv2 > +0.5 *
-                                 cv2_fes_range] -= cv2_fes_range
-
-                    dp2 = dist_cv1**2/(2*self.s1**2) + \
-                        dist_cv2**2/(2*self.s2**2)
-                    tmp = np.zeros(self.cv1.shape)
-                    tmp[dp2 < 6.25] = self.heights[dp2 < 6.25] * \
-                        (np.exp(-dp2[dp2 < 6.25]) *
-                         1.00193418799744762399 - 0.00193418799744762399)
-                    fes[x, y] = -tmp.sum()
-
-            fes = fes - np.min(fes)
-            self.fes = np.array(fes)
-
-        elif self.cvs == 3:
-            if cv1range == None:
-                if self.periodic[0]:
-                    cv1min = self.cv1per[0]
-                    cv1max = self.cv1per[1]
-                    cv1_fes_range = np.abs(self.cv1per[1]-self.cv1per[0])
-                else:
-                    cv1range = self.cv1max-self.cv1min
-                    cv1min = self.cv1min
-                    cv1max = self.cv1max
-                    cv1min -= cv1range*0.15
-                    cv1max += cv1range*0.15
-                    cv1_fes_range = cv1max - cv1min
-            else:
-                cv1min = cv1range[0]
-                cv1max = cv1range[1]
-                self.cv1range = cv1range
-                cv1_fes_range = cv1max-cv1min
-
-            if cv2range == None:
-                if self.periodic[1]:
-                    cv2min = self.cv2per[0]
-                    cv2max = self.cv2per[1]
-                    cv2_fes_range = np.abs(self.cv2per[1]-self.cv2per[0])
-                else:
-                    cv2range = self.cv2max-self.cv2min
-                    cv2min = self.cv2min
-                    cv2max = self.cv2max
-                    cv2min -= cv2range*0.15
-                    cv2max += cv2range*0.15
-                    cv2_fes_range = cv2max - cv2min
-            else:
-                cv2min = cv2range[0]
-                cv2max = cv2range[1]
-                self.cv2range = cv2range
-                cv2_fes_range = cv2max-cv2min
-
-            if cv3range == None:
-                if self.periodic[2]:
-                    cv3min = self.cv3per[0]
-                    cv3max = self.cv3per[1]
-                    cv3_fes_range = np.abs(self.cv3per[1]-self.cv3per[0])
-                else:
-                    cv3range = self.cv3max-self.cv3min
-                    cv3min = self.cv3min
-                    cv3max = self.cv3max
-                    cv3min -= cv3range*0.15
-                    cv3max += cv3range*0.15
-                    cv3_fes_range = cv3max - cv3min
-            else:
-                cv3min = cv3range[0]
-                cv3max = cv3range[1]
-                self.cv3range = cv3range
-                cv3_fes_range = cv3max-cv3min
-
-            fes = np.zeros((self.res, self.res, self.res))
-
-            for x in trange(self.res, desc="Constructing FES"):
-                dist_cv1 = self.cv1-(cv1min+(x)*cv1_fes_range/(self.res))
-                if self.periodic[0]:
-                    dist_cv1[dist_cv1 < -0.5*cv1_fes_range] += cv1_fes_range
-                    dist_cv1[dist_cv1 > +0.5*cv1_fes_range] -= cv1_fes_range
-
-                for y in range(self.res):
-                    dist_cv2 = self.cv2-(cv2min+(y)*cv2_fes_range/(self.res))
-                    if self.periodic[1]:
-                        dist_cv2[dist_cv2 < -0.5 *
-                                 cv2_fes_range] += cv2_fes_range
-                        dist_cv2[dist_cv2 > +0.5 *
-                                 cv2_fes_range] -= cv2_fes_range
-
-                    for z in range(self.res):
-                        dist_cv3 = self.cv3 - \
-                            (cv3min+(z)*cv3_fes_range/(self.res))
-                        if self.periodic[2]:
-                            dist_cv3[dist_cv3 < -0.5 *
-                                     cv3_fes_range] += cv3_fes_range
-                            dist_cv3[dist_cv3 > +0.5 *
-                                     cv3_fes_range] -= cv3_fes_range
-
-                        dp2 = dist_cv1**2 / \
-                            (2*self.s1**2) + dist_cv2**2 / \
-                            (2*self.s2**2) + dist_cv3**2/(2*self.s3**2)
-                        tmp = np.zeros(self.cv1.shape)
-                        tmp[dp2 < 6.25] = self.heights[dp2 < 6.25] * (
-                            np.exp(-dp2[dp2 < 6.25]) * 1.00193418799744762399 - 0.00193418799744762399)
-                        fes[x, y, z] = -tmp.sum()
-
-            fes = fes - np.min(fes)
-            self.fes = np.array(fes)
-        else:
-            print(f"Error: unsupported number of CVs: {self.cvs}.")
+        fes = fes - np.min(fes)
+        self.fes = np.array(fes)
 
     def plot(self, png_name=None, contours=True, contours_spacing=0.0, aspect=1.0, cmap="jet",
              energy_unit="kJ/mol", xlabel=None, ylabel=None, zlabel=None, label_size=12, image_size=[10, 7],
