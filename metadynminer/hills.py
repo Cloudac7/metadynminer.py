@@ -76,9 +76,10 @@ class Hills:
                         "cv_per has to be provided for each periodic CV"
                     )
                 try:
-                    self.cv_min[i] = self.cv_per[flag][0]
-                    self.cv_max[i] = self.cv_per[flag][1]
-                    flag += 1
+                    if self.cv_per[flag][0] <= self.cv_per[flag][1]:
+                        self.cv_min[i] = self.cv_per[flag][0]
+                        self.cv_max[i] = self.cv_per[flag][1]
+                        flag += 1
                 except IndexError:
                     raise ValueError(
                         "cv_per has to be provided for each periodic CV"

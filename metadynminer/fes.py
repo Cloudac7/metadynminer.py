@@ -36,47 +36,51 @@ class Fes:
     """
 
     def __init__(
-            self,
-            hills: Hills, 
-            original: bool = False,
-            calculate_new_fes: bool = True,
-            resolution: int = 256, 
-            cv_range: Optional[List[float]] = None, 
-            cv_select: Optional[List[int]] = None,
-            time_min: int = 0,
-            time_max: Optional[int] = None
-        ):
+        self,
+        hills: Hills,
+        original: bool = False,
+        calculate_new_fes: bool = True,
+        resolution: int = 256,
+        cv_range: Optional[List[float]] = None,
+        cv_select: Optional[List[int]] = None,
+        time_min: int = 0,
+        time_max: Optional[int] = None
+    ):
         self.res = resolution
         self.fes = None
 
         self.hills = hills
         self.periodic = hills.get_periodic()
-        
+
         if cv_select != None:
             self.cvs = len(cv_select)
         else:
-            cv_select = [i for i in range(self.cvs)]
+            cv_select = [i for i in range(self.hills.cvs)]
 
         if time_max != None:
             if time_max <= time_min:
                 print("Error: End time is lower than start time")
             if time_max > len(self.hills.cv[:, 0]):
                 time_max = len(self.hills.cv[:, 0])
-                print(f"Error: End time {time_max} is higher than",
-                      f"number of lines in HILLS file {len(self.hills.cv[:, 0])},",
-                      "which will be used instead.")
+                print(
+                    f"Error: End time {time_max} is higher than",
+                    f"number of lines in HILLS file {len(self.hills.cv[:, 0])},",
+                    "which will be used instead."
+                )
 
         if calculate_new_fes:
             if not original:
-                self.makefes(resolution, cv_select, cv_range, time_min, time_max)
+                self.makefes(resolution, cv_select,
+                             cv_range, time_min, time_max)
             else:
-                self.makefes2(resolution, cv_select, cv_range, time_min, time_max)
+                self.makefes2(resolution, cv_select,
+                              cv_range, time_min, time_max)
 
     def generate_cv_map(
-            self, 
-            cv_select: Optional[List[int]] = None,
-            cv_range: Optional[List[float]] = None 
-        ):
+        self,
+        cv_select: Optional[List[int]] = None,
+        cv_range: Optional[List[float]] = None
+    ):
         """generate CV map
 
         Args:
@@ -95,26 +99,40 @@ class Fes:
             cv_max = self.hills.cv_max[cv_select]
             cv_range = self.hills.cv_max - self.hills.cv_min
         else:
-            cv_min = np.full(len(cv_select), cv_range[0])
-            cv_max = np.full(len(cv_select), cv_range[1])
+            if len(cv_range) != len(cv_select) and len(cv_range) != 2:
+                raise ValueError(
+                    "cv_range has to have the same length as cv_select"
+                    "or be a list of two numbers"
+                )
+            elif len(cv_range) == 2:
+                if type(cv_range[0]) == int:
+                    cv_min = np.full(len(cv_select), cv_range[0])
+                    cv_max = np.full(len(cv_select), cv_range[1])
+            else:
+                cv_min = np.array(cv_range)[:, 0]
+                cv_max = np.array(cv_range)[:, 1]
+
         self.cv_range = cv_range
 
-        cv_min[~self.periodic[cv_select]] -= cv_min[~self.periodic[cv_select]] * 0.15
-        cv_max[~self.periodic[cv_select]] += cv_min[~self.periodic[cv_select]] * 0.15
-        cv_fes_range = np.abs(cv_max - cv_min)
+        cv_min[~self.periodic[cv_select] # type: ignore
+               ] -= cv_range[~self.periodic[cv_select]] * 0.15 # type: ignore
+        cv_max[~self.periodic[cv_select] # type: ignore
+               ] += cv_range[~self.periodic[cv_select]] * 0.15 # type: ignore
+        cv_fes_range = np.abs(cv_max - cv_min) # type: ignore
 
-        self.cv_min = cv_min
-        self.cv_max = cv_max
+        # generate remapped cv_min and cv_max
+        self.cv_min = cv_min # type: ignore
+        self.cv_max = cv_max # type: ignore
         self.cv_fes_range = cv_fes_range
 
     def makefes(
-            self, 
-            resolution: Optional[int] = None, 
-            cv_select: Optional[List[int]] = None,
-            cv_range: Optional[List[float]] = None, 
-            time_min: Optional[int] = None,
-            time_max: Optional[int] = None
-        ):
+        self,
+        resolution: Optional[int] = None,
+        cv_select: Optional[List[int]] = None,
+        cv_range: Optional[List[float]] = None,
+        time_min: Optional[int] = None,
+        time_max: Optional[int] = None
+    ):
         """calculate FES using fast algorithm"""
 
         if resolution is None:
@@ -130,18 +148,20 @@ class Fes:
         cv_fes_range = self.cv_fes_range
 
         cv_bins = np.array([np.ceil(
-            (self.hills.cv[time_min:time_max, cv_index] - cv_min[cv_index]) * resolution / cv_fes_range[cv_index]
-        ) for cv_index in cv_select]) 
+            (self.hills.cv[time_min:time_max, cv_index] -
+             cv_min[cv_index]) * resolution / cv_fes_range[cv_index]
+        ) for cv_index in cv_select])
         cvs = len(cv_select)
         cv_bins = cv_bins.astype(int)
 
-        sigma = np.array([self.hills.sigma[cv_index][0] for cv_index in cv_select])
+        sigma = np.array([self.hills.sigma[cv_index][0]
+                         for cv_index in cv_select])
         sigma_res = (sigma * self.res) / (cv_max - cv_min)
 
         gauss_res = np.max((8 * sigma_res).astype(int))
         if gauss_res % 2 == 0:
             gauss_res += 1
-    
+
         gauss_center_to_end = int((gauss_res - 1) / 2)
         gauss_center = gauss_center_to_end + 1
         grids = np.meshgrid(*[np.arange(gauss_res)] * cvs)
@@ -167,37 +187,39 @@ class Fes:
                 fes_index_to_edit[d] += cv_bins[d][line]
                 if not self.periodic[d]:
                     mask = np.where(
-                        (fes_index_to_edit[d] < 0) & (fes_index_to_edit[d] > resolution - 1)
+                        (fes_index_to_edit[d] < 0) & (
+                            fes_index_to_edit[d] > resolution - 1)
                     )[0]
                     # if the cv is not periodic, remove the indexes outside the fes
                     local_mask[mask] = 0
                 # make sure the indexes are inside the fes
                 fes_index_to_edit[d] = np.mod(fes_index_to_edit[d], resolution)
-            fes[tuple(fes_index_to_edit)] += gauss * local_mask * self.hills.heights[line]
+            fes[tuple(fes_index_to_edit)] += gauss * \
+                local_mask * self.hills.heights[line]
         fes = fes - np.min(fes)
         self.fes = fes
         return fes
 
     def makefes2(
-            self, 
-            resolution: Optional[int], 
-            cv_select: Optional[List[int]] = None, 
-            cv_range: Optional[List[float]] = None, 
-            time_min: Optional[int] = None,
-            time_max: Optional[int] = None
-        ):
+        self,
+        resolution: Optional[int],
+        cv_select: Optional[List[int]] = None,
+        cv_range: Optional[List[float]] = None,
+        time_min: Optional[int] = None,
+        time_max: Optional[int] = None
+    ):
         """
         Function internally used to sum Hills in the same way as Plumed sum_hills. 
         """
 
         if resolution is None:
             resolution = self.res
-        
+
         self.generate_cv_map(cv_select, cv_range)
         cv_min = self.cv_min
         cv_max = self.cv_max
         cv_fes_range = self.cv_fes_range
-        
+
         cvs = len(self.cv_select)
         fes = np.zeros([resolution] * cvs)
         if time_min and time_max:
@@ -207,24 +229,26 @@ class Fes:
             time_max = self.hills.cv[:, 0].shape[0]
             time_limit = time_max - time_min
 
-        for index in tqdm(np.ndindex(fes.shape), # type: ignore
+        for index in tqdm(np.ndindex(fes.shape),  # type: ignore
                           desc="Constructing FES",
-                          total=np.prod(fes.shape)): # type: ignore
+                          total=np.prod(fes.shape)):  # type: ignore
             dp2_array = np.zeros([cvs, time_limit])
             for i, cv_idx in enumerate(self.cv_select):
                 dist_cv = \
-                    self.hills.cv[:, cv_idx] - (cv_min[i] + index[i] * cv_fes_range[i] / resolution)
+                    self.hills.cv[:, cv_idx] - \
+                    (cv_min[i] + index[i] * cv_fes_range[i] / resolution)
                 if self.periodic[cv_idx]:
                     dist_cv[dist_cv < -0.5*cv_fes_range[i]] += cv_fes_range[i]
                     dist_cv[dist_cv > +0.5*cv_fes_range[i]] -= cv_fes_range[i]
-                dp2_local = dist_cv ** 2 / (2 * self.hills.sigma[cv_idx][0] ** 2)
+                dp2_local = dist_cv ** 2 / \
+                    (2 * self.hills.sigma[cv_idx][0] ** 2)
                 dp2_array[i] = dp2_local
             dp2 = np.sum(dp2_array, axis=0)
 
             tmp = np.zeros(time_limit)
             tmp[dp2 < 6.25] = self.hills.heights[dp2 < 6.25] * \
-                    (np.exp(-dp2[dp2 < 6.25]) *
-                     1.00193418799744762399 - 0.00193418799744762399)
+                (np.exp(-dp2[dp2 < 6.25]) *
+                 1.00193418799744762399 - 0.00193418799744762399)
             fes[index] = -tmp.sum()
 
         fes = fes - np.min(fes)
@@ -262,7 +286,8 @@ class Fes:
         import matplotlib.pyplot as plt
 
         if self.fes is None:
-            raise ValueError("FES not calculated yet. Use makefes() or makefes2() first.")
+            raise ValueError(
+                "FES not calculated yet. Use makefes() or makefes2() first.")
 
         if vmax == None:
             # if the addition is smaller than 0.01, the 3d plot stops working.
@@ -275,16 +300,18 @@ class Fes:
 
         cmap.set_over("white")
         cmap.set_under("white")
-        
+
         cvs = len(self.cv_select)
 
         if cvs == 1:
             cv_index = self.cv_select[0]
             plt.figure(figsize=(image_size[cv_index], image_size[1]))
-            X = np.linspace(self.cv_min[cv_index], self.cv_max[cv_index], self.res)
+            X = np.linspace(self.cv_min[cv_index],
+                            self.cv_max[cv_index], self.res)
             plt.plot(X, self.fes)
             if xlabel == None:
-                plt.xlabel(f'CV1 - {self.hills.cv_name[cv_index]}', size=label_size)
+                plt.xlabel(
+                    f'CV1 - {self.hills.cv_name[cv_index]}', size=label_size)
             else:
                 plt.xlabel(xlabel, size=label_size)
             if ylabel == None:
@@ -304,7 +331,7 @@ class Fes:
             plt.imshow(np.rot90(self.fes, axes=(0, 1)), cmap=cmap, interpolation='nearest',
                        extent=[cv1min, cv1max, cv2min, cv2max],
                        aspect=(((cv1max-cv1min)/(cv2max-cv2min))/(aspect)),
-                       vmin=vmin, vmax=vmax) # type: ignore
+                       vmin=vmin, vmax=vmax)  # type: ignore
             cbar = plt.colorbar()
             cbar.set_label(energy_unit, size=label_size)
             if contours:
@@ -316,11 +343,13 @@ class Fes:
                 plt.clabel(cont, levels=np.arange(
                     0, (vmax - 0.01), contours_spacing))
             if xlabel == None:
-                plt.xlabel(f'CV1 - {self.hills.cv_name[cv1_index]}', size=label_size)
+                plt.xlabel(
+                    f'CV1 - {self.hills.cv_name[cv1_index]}', size=label_size)
             else:
                 plt.xlabel(xlabel, size=label_size)
             if ylabel == None:
-                plt.ylabel(f'CV2 - {self.hills.cv_name[cv1_index]}', size=label_size)
+                plt.ylabel(
+                    f'CV2 - {self.hills.cv_name[cv2_index]}', size=label_size)
             else:
                 plt.ylabel(ylabel, size=label_size)
 
@@ -421,33 +450,36 @@ class Fes:
             # grid.plot()
 
             fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
-            ax.plot_surface(X, Y, Z, cmap=cmap, # type: ignore
+            ax.plot_surface(X, Y, Z, cmap=cmap,  # type: ignore
                             rstride=rstride, cstride=cstride)
 
             if xlabel == None:
-                ax.set_xlabel(f'CV1 - {self.hills.cv_name[cv1_index]}', size=label_size)
+                ax.set_xlabel(
+                    f'CV1 - {self.hills.cv_name[cv1_index]}', size=label_size)
             else:
                 ax.set_xlabel(xlabel, size=label_size)
             if ylabel == None:
-                ax.set_ylabel(f'CV2 - {self.hills.cv_name[cv2_index]}', size=label_size)
+                ax.set_ylabel(
+                    f'CV2 - {self.hills.cv_name[cv2_index]}', size=label_size)
             else:
                 ax.set_ylabel(ylabel, size=label_size)
             if zlabel == None:
-                ax.set_zlabel(f'free energy ({energy_unit})', size=label_size) # type: ignore
+                # type: ignore
+                ax.set_zlabel(f'free energy ({energy_unit})', size=label_size)
             else:
-                ax.set_zlabel(zlabel, size=label_size) # type: ignore
+                ax.set_zlabel(zlabel, size=label_size)  # type: ignore
         else:
             raise ValueError(
                 f"Surface plot only works for FES with exactly two CVs, and this FES has {self.hills.cvs}"
             )
 
     def removeCV(
-            self, 
-            CV: int, 
-            energy_unit: str = "kJ/mol", 
-            kb: Optional[float] = None,
-            temp: float = 300.0
-        ):
+        self,
+        CV: int,
+        energy_unit: str = "kJ/mol",
+        kb: Optional[float] = None,
+        temp: float = 300.0
+    ):
         """
         This function is used to remove a CV from an existing FES. The function first recalculates the FES to an array of probabilities. The probabilities 
         are summed along the CV to be removed, and resulting probability distribution with 1 less dimension is converted back to FES. 
@@ -463,7 +495,8 @@ class Fes:
         print(f"Removing CV {CV}.")
 
         if self.fes is None:
-            raise ValueError("FES not calculated yet. Use makefes() or makefes2() first.")
+            raise ValueError(
+                "FES not calculated yet. Use makefes() or makefes2() first.")
 
         if CV > self.hills.cvs:
             print("Error: The CV to remove is not available in this FES object.")
@@ -474,7 +507,8 @@ class Fes:
             elif energy_unit == "kcal/mol":
                 kb = 8.314e-3 / 4.184
             else:
-                raise ValueError("Please give the Boltzmann Constant in the energy unit.")
+                raise ValueError(
+                    "Please give the Boltzmann Constant in the energy unit.")
 
         if self.cvs == 1:
             print("Error: You can not remove the only CV. ")
@@ -525,7 +559,8 @@ class Fes:
             sys.exit(1)
 
         if self.fes is None:
-            raise ValueError("FES not calculated yet. Use makefes() or makefes2() first.")
+            raise ValueError(
+                "FES not calculated yet. Use makefes() or makefes2() first.")
 
         if self.cvs == 3:
             cv1_index = self.cv_select[0]
@@ -567,8 +602,8 @@ class Fes:
             plotter.add_mesh(grid.outline_corners(), color="k")
             if xlabel == None and ylabel == None and zlabel == None:
                 plotter.show_grid(
-                    xlabel=f"CV1 - {self.hills.cv_name[cv1_index]}", 
-                    ylabel=f"CV2 - {self.hills.cv_name[cv2_index]}", 
+                    xlabel=f"CV1 - {self.hills.cv_name[cv1_index]}",
+                    ylabel=f"CV2 - {self.hills.cv_name[cv2_index]}",
                     zlabel=f"CV3 - {self.hills.cv_name[cv3_index]}")
             else:
                 plotter.show_grid(xlabel=xlabel, ylabel=ylabel, zlabel=zlabel)
@@ -587,4 +622,5 @@ class Fes:
             # Be sure to close the plotter when finished
             plotter.close()
         else:
-            raise ValueError("Error: gif_plot is only available for FES with 3 CVs.")
+            raise ValueError(
+                "Error: gif_plot is only available for FES with 3 CVs.")
