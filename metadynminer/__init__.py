@@ -1,5 +1,5 @@
 name = "metadynminer"
-__version__ = "0.1.3"
+__version__ = "0.1.4"
 __author__ = 'Jan Beránek'
 """
 Metadynminer is a package designed to help you analyse output HILLS files from PLUMED metadynamics simulations. It is based on Metadynminer package for R programming language, but it is not just a port from R to Python, as it is updated and improved in many aspects. It supports HILLS files with one, two or three collective variables. 
@@ -34,25 +34,3 @@ fep.plot()
 These functions can be easily customized with many parameters. You can learn more about that later in the documentation. 
 There are also other predefined functions allowing you for example to remove a CV from existing FES or enhance your presentation with animated 3D FES. 
 """
-import sys
-
-try:
-    import numpy as np
-except:
-    print("Error while loading numpy")
-    sys.exit(1)
-try:
-    from matplotlib import pyplot as plt
-except:
-    print("Error while loading matplotlib pyplot")
-    sys.exit(1)
-try:
-    from matplotlib import colormaps as cm
-except:
-    print("Error while loading matplotlib colormaps")
-    sys.exit(1)
-try:
-    import pandas as pd
-except:
-    print("Error while loading pandas")
-    sys.exit(1)

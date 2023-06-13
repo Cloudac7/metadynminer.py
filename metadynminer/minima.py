@@ -362,7 +362,10 @@ class Minima():
             self.minima = np.append("A", self.minima)
         
         if self.cvs == 1:
-            self.minima = pd.DataFrame(self.minima, columns = ["Minimum", "free energy", "CV1bin", "CV1 - "+self.cv_name[0]])
+            if len(self.minima.shape)>1:
+                self.minima = pd.DataFrame(np.array(self.minima), columns = ["Minimum", "free energy", "CV1bin", "CV1 - "+self.cv_name[0]])
+            elif len(self.minima.shape) == 1:
+                self.minima = pd.DataFrame([self.minima], columns = ["Minimum", "free energy", "CV1bin", "CV1 - "+self.cv_name[0]])
         elif self.cvs == 2:
             if len(self.minima.shape)>1:
                 self.minima = pd.DataFrame(np.array(self.minima), columns = ["Minimum", "free energy", "CV1bin", "CV2bin", 
