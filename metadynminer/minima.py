@@ -68,7 +68,6 @@ class Minima():
             cv1min = self.cv_min[0]
             cv1max = self.cv_max[0]
             for bin1 in range(0,nbins):
-                
                 fes_slice = self.fes[bin1*bin_size:(bin1+1)*bin_size]
                 bin_min = np.min(fes_slice)
                 argmin = np.argmin(fes_slice)

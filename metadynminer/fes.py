@@ -41,8 +41,8 @@ class Fes:
         original: bool = False,
         calculate_new_fes: bool = True,
         resolution: int = 256,
-        cv_range: Optional[List[float]] = None,
         cv_select: Optional[List[int]] = None,
+        cv_range: Optional[List[float]] = None,
         time_min: int = 0,
         time_max: Optional[int] = None
     ):
@@ -93,6 +93,8 @@ class Fes:
         """
         if cv_select is None:
             cv_select = list(range(self.cvs))
+        
+        self.cv_select = cv_select
 
         if cv_range is None:
             cv_min = self.hills.cv_min[cv_select]
@@ -137,12 +139,8 @@ class Fes:
 
         if resolution is None:
             resolution = self.res
-
-        if cv_select is None:
-            cv_select = list(range(self.cvs))
-
-        self.cv_select = cv_select
         self.generate_cv_map(cv_select, cv_range)
+
         cv_min = self.cv_min
         cv_max = self.cv_max
         cv_fes_range = self.cv_fes_range
