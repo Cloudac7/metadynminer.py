@@ -3,34 +3,32 @@ import numpy as np
 import pandas as pd
 
 from itertools import product
+from typing import Optional, List
 from metadynminer.fes import Fes
 
 
-class Minima():
+class Minima:
     """
-    Object of Minima class is created to find local free energy minima on FES. 
-    The FES is first divided to some number of bins, 
-    (the number of bins can be set with option nbins, default is 8)
-    and the absolute minima is found for each bin. Then the algorithm checks 
-    if this point is really a local minimum by comparing to the surrounding points of FES.
+    Represents an object of the Minima class used to find local free energy minima on a free energy surface (FES).
 
-    The list of minima is stored as pandas dataframe. 
+    The FES is divided into a specified number of bins (default is 8), and the absolute minima is found for each bin. 
+    The algorithm then checks if each found point is a local minimum by comparing it to the surrounding points on the FES.
 
-    Command:
+    The list of minima is stored as a pandas DataFrame.
+
+    Usage:
     ```python
     minima = metadynminer.Minima(fes=f, nbins=8)
     ```
 
-    List of minima can be later called like this:
-
+    The list of minima can be accessed using the `minima.minima` attribute:
     ```python
     print(minima.minima)
     ```
 
-    Parameters:
-
-    - fes = Fes object to find the minima on
-    - nbins (default = 8) = number of bins to divide the FES
+    Args:
+        fes (Fes): The Fes object to find the minima on.
+        nbins (int, default=8): The number of bins used to divide the FES.
     """
 
     def __init__(
@@ -55,8 +53,11 @@ class Minima():
         self.findminima(nbins=nbins)
 
     def findminima(self, nbins=8):
-        """
-        Internal method for finding local minima on FES.
+        """Method for finding local minima on FES.
+
+        Args:
+            fes (Fes): The Fes object to find the minima on.
+            nbins (int, default=8): The number of bins used to divide the FES.
         """
         cv_min = self.cv_min
         cv_max = self.cv_max
@@ -160,54 +161,86 @@ class Minima():
         minima_df["Minimum"] = minima_df["Minimum"].astype(int)
         self.minima = minima_df
 
-    def plot(self, png_name=None, contours=True, contours_spacing=0.0, aspect=1.0, cmap="jet",
-             energy_unit="kJ/mol", xlabel=None, ylabel=None, zlabel=None, label_size=12, image_size=[10, 7],
-             color=None, vmin=0, vmax=None, opacity=0.2, levels=None, show_points=True, point_size=4.0):
+    def plot(
+        self,
+        png_name: Optional[str] = None,
+        contours: bool = True,
+        contours_spacing: float = 0.0,
+        aspect: float = 1.0,
+        cmap: str = "jet",
+        energy_unit: str = "kJ/mol",
+        xlabel: Optional[str] = None,
+        ylabel: Optional[str] = None,
+        zlabel: Optional[str] = None,
+        label_size: int = 12,
+        image_size: List[int] = [10, 7],
+        color: Optional[str] = None,
+        vmin: float = 0,
+        vmax: Optional[float] = None,
+        opacity: float = 0.2,
+        levels: Optional[List[float]] = None,
+        show_points: bool = True,
+        point_size: float = 4.0,
+    ):
         """
-        The same function as for visualizing Fes objects, but this time 
-        with the positions of local minima shown as letters on the graph.
+        Function used to visualize the FES objects with the positions of local minima shown as letters on the graph.
 
+        Usage:
         ```python
         minima.plot()
         ```
 
-        Parameters:
-
-        - png_name = String. If this parameter is supplied, the picture of FES will be saved under this name to the current working directory.
-        - contours (default=True) = whether contours should be shown on 2D FES
-        - contours_spacing (default=0.0) = when a positive number is set, it will be used as spacing for contours on 2D FES. 
+        Args:
+            png_name (str, optional): \
+                If provided, the picture of the FES will be saved under this name to the current working directory.
+            contours (bool, default=True): \
+                Specifies whether contours should be shown on the 2D FES.
+            contours_spacing (float, default=0.0): \
+                When a positive number is set, it will be used as the spacing for contours on the 2D FES. \
                 Otherwise, if contours=True, there will be five equally spaced contour levels.
-        - aspect (default = 1.0) = aspect ratio of the graph. Works with 1D and 2D FES. 
-        - cmap (default = "jet") = Matplotlib colormap used to color 2D or 3D FES
-        - energy_unit (default="kJ/mol") = String, used in description of colorbar
-        - xlabel, ylabel, zlabel = Strings, if provided, they will be used as labels for the graphs
-        - labelsize (default = 12) = size of text in labels
-        - image_size (default = [10,7]) = List of the width and height of the picture
-        - color = string = name of color in matplotlib, if set, the color will be used for the letters. 
-                If not set, the color should be automatically either black or white, 
-                depending on what will be better visible on given place on FES with given colormap (for 2D FES).
-        - vmin (default=0) = real number, lower bound for the colormap on 2D FES
-        - vmax = real number, upper bound for the colormap on 2D FES
-        - opacity (default=0.2) = number between 0 and 1, is the opacity of isosurfaces of 3D FES
-        - levels = Here you can specify list of free energy values for isosurfaces on 3D FES. 
-                If not provided, default values from contours parameters will be used instead. 
-        - show_points (default=True) = boolean, tells if points should be visualized too, instead of just the letters. Only on 3D FES. 
-        - point_size (default=4.0) = float, sets the size of points if show_points=True
+            aspect (float, default=1.0): \
+                The aspect ratio of the graph. Works with 1D and 2D FES.
+            cmap (str, default="jet"): \
+                The Matplotlib colormap used to color the 2D or 3D FES.
+            energy_unit (str, default="kJ/mol"): \
+                A string used in the description of the colorbar.
+            xlabel, ylabel, zlabel (str, optional): \
+                If provided, they will be used as labels for the graphs.
+            label_size (int, default=12): The size of text in labels.
+            image_size (List[int], default=[10,7]): The width and height of the picture.
+            color (str, optional): \
+                The name of the color in Matplotlib. \
+                If set, the color will be used for the letters. \
+                If not set, the color should be automatically either black or white, \
+                depending on what will be more visible on the given place on the FES with the given colormap (for 2D FES).
+            vmin (float, default=0): The lower bound for the colormap on the 2D FES.
+            vmax (float, optional): The upper bound for the colormap on the 2D FES.
+            opacity (float, default=0.2): \
+                A number between 0 and 1 representing the opacity of isosurfaces in the 3D FES.
+            levels (List[float], optional): \
+                A list of free energy values for isosurfaces on the 3D FES. \
+                If not provided, default values from the contours parameters will be used instead.
+            show_points (bool, default=True): \
+                Specifies whether points should be visualized instead of just the letters. \
+                Only applicable for 3D FES.
+            point_size (float, default=4.0): \
+                The size of points if show_points=True.
         """
+
         import matplotlib.pyplot as plt
         import matplotlib.cm as cm
 
         if vmax == None:
             # if the addition is smaller than 0.01, the 3d plot stops working.
-            vmax = np.max(self.fes)+0.01
+            vmax = np.max(self.fes) + 0.01
 
         if contours_spacing == 0.0:
             contours_spacing = (vmax-vmin)/5.0
 
-        cmap = cm.get_cmap(cmap)
+        color_map = cm.get_cmap(cmap)
 
-        cmap.set_over("white")
-        cmap.set_under("white")
+        color_map.set_over("white")
+        color_map.set_under("white")
 
         color_set = True
         if color == None:
@@ -248,7 +281,7 @@ class Minima():
             cv1min, cv2min = self.cv_min[0], self.cv_min[1]
             cv1max, cv2max = self.cv_max[0], self.cv_max[1]
             fig = plt.figure(figsize=(image_size[0], image_size[1]))
-            plt.imshow(np.rot90(self.fes, axes=(0, 1)), cmap=cmap, interpolation='nearest',
+            plt.imshow(np.rot90(self.fes, axes=(0, 1)), cmap=color_map, interpolation='nearest',
                        extent=[cv1min, cv1max, cv2min, cv2max],
                        aspect=(((cv1max-cv1min)/(cv2max-cv2min))/(aspect)),
                        vmin=vmin, vmax=vmax)
@@ -256,7 +289,7 @@ class Minima():
             cbar.set_label(energy_unit, size=label_size)
 
             if self.minima.shape[0] == 1:
-                background = cmap(
+                background = color_map(
                     (float(self.minima.iloc[1])-vmin)/(vmax-vmin))
                 luma = background[0]*0.2126+background[1] * \
                     0.7152+background[3]*0.0722
@@ -269,7 +302,7 @@ class Minima():
                          verticalalignment='center', c=color)
             elif self.minima.shape[0] > 1:
                 for m in range(len(self.minima.iloc[:, 0])):
-                    background = cmap(
+                    background = color_map(
                         (float(self.minima.iloc[m, 1])-vmin)/(vmax-vmin))
                     luma = background[0]*0.2126 + \
                         background[1]*0.7152+background[3]*0.0722
@@ -339,7 +372,7 @@ class Minima():
             pv.set_plot_theme('document')
             p = pv.Plotter()
             p.add_mesh(contours, scalars=fescolors, opacity=opacity,
-                       cmap=cmap, show_scalar_bar=False, interpolate_before_map=True)
+                       cmap=color_map, show_scalar_bar=False, interpolate_before_map=True)
             p.show_grid(xlabel=xlabel, ylabel=ylabel, zlabel=zlabel)
             p.add_point_labels(min_pv, self.minima.iloc[:, 0],
                                show_points=show_points, always_visible=True,

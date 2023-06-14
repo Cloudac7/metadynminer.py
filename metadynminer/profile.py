@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 
 from itertools import product
+from typing import List, Optional
 from metadynminer.hills import Hills
 from metadynminer.minima import Minima
 
@@ -13,14 +14,14 @@ class FEProfile:
     to converge to a mean value of the difference, it suggests, 
     but not fully proof, that the FES did converge to the correct shape.
 
-    Command:
+    Usage:
     ```python
     fep = metadynminer.FEProfile(minima, hillsfile)
     ```
 
-    Parameters:
-    - minima = metadynminer.Minima object
-    - hillsfile = metadynminer.Hills object
+    Args:
+        minima (Minima): `Minima` to be calculated the free energy profile for.
+        hillsfile (Hills): File of `Hills` to calculate the free energy profile from.
 
     """
 
@@ -111,33 +112,42 @@ class FEProfile:
 
             lasttime = time
 
-    def plot(self, name="FEprofile.png", image_size=[10, 7], xlabel=None, ylabel=None, label_size=12, cmap="jet"):
+    def plot(
+        self,
+        name: str = "FEProfile.png",
+        image_size: List[int] = [10, 7],
+        xlabel: Optional[str] = None,
+        ylabel: Optional[str] = None,
+        label_size: int = 12,
+        cmap: str = "jet",
+    ):
         """
-        Visualization function for FEP. 
+        Visualization function for Free Energy Profile (FEP).
 
+        Usage:
         ```python
         fep.plot()
         ```
 
-        Parameters:
-
-        - name (default="FEProfile.png") = name for .png file to save the plot to
-        - image_size (default=[10,7]) = list of two dimensions of the picture
-        - xlabel (default="time (ps)")
-        - ylabel (default="free energy difference (kJ/mol)") 
-        - label_size (default=12) = size of labels
-        - cmap (default="jet") = matplotlib colormap used for coloring the line of the minima
+        Args:
+            name (str): Name for the .png file to save the plot to. Defaults to be "FEProfile.png".
+            image_size (List[int]): List of two dimensions of the picture. Defaults to be [10, 7].
+            xlabel (str, optional): X-axis label. Defaults to be None.
+            ylabel (str, optional): Y-axis label. Defaults to be None.
+            label_size (int): Size of labels. Defaults to be 12.
+            cmap (str): Matplotlib colormap used for coloring the line of the minima. Defaults to be "jet".
         """
+
         import matplotlib.pyplot as plt
         import matplotlib.cm as cm
 
         plt.figure(figsize=(image_size[0], image_size[1]))
 
-        cmap = cm.get_cmap(cmap)
+        color_map = cm.get_cmap(cmap)
 
         # colors = cm.jet((self.minima.iloc[:,1].to_numpy()).astype(float)/\
         #                (np.max(self.minima.iloc[:,1].to_numpy().astype(float))))
-        colors = cmap(np.linspace(0, 1, self.minima.shape[0]))
+        colors = color_map(np.linspace(0, 1, self.minima.shape[0]))
         for m in range(self.minima.shape[0]):
             plt.plot(self.feprofile[:, 0],
                      self.feprofile[:, m+1], color=colors[m])

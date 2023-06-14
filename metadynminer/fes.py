@@ -8,32 +8,35 @@ from metadynminer.hills import Hills
 
 class Fes:
     """
-    Object of this class is created to compute the free energy surface corresponding to the provided Hills object. 
-    Command:
+    Computes the free energy surface corresponding to the provided Hills object.
+
+    Usage:
     ```python
     fes = metadynminer.Fes(hills=hillsfile)
     ```
-    parameters:
 
-    - hills = Hills object
-
-    - resolution (default=256) = \
-        should be positive integer, controls the resolution of FES
-
-    - original (default=False) = \
-        boolean, if False, FES will be calculated using very fast, but not
-        'exact' Bias Sum Algorithm
-        if True, FES will be calculated with slower algorithm, 
-        but it will be exactly the same as FES calculated 
-        with PLUMED sum_hills function
-
-    - cv_selected (default=None) = \
-        list of integers, specifying which CVs should be used for FES calculation
-
-    - cv1range, cv2range, cv3range = \
-        lists of two numbers, defining lower and upper bound of 
-        the respective CV (in the units of the CVs)
+    Args:
+        hills (Hills): The Hills object used for computing the free energy surface.
+        original (bool, optional): \
+            If False, the free energy surface will be calculated using a fast but approximate algorithm. \
+            If True, it will be calculated using a slower but exact algorithm \
+            (same as FES calculated with PLUMED `sum_hills` function). \
+            Defaults to False.
+        calculate_new_fes (bool, optional): \
+            If True, the free energy surface will be calculated to form `self.fes`. \
+            Defaults to True.
+        resolution (int, optional): \
+            The resolution of the free energy surface. Defaults to 256.
+        cv_select (List[int], optional): \
+            A list of integers specifying which collective variables (CVs) should be used for FES calculation. \
+            Defaults to None.
+        cv_range (List[float], optional): \
+            A list of two numbers defining the lower and upper bounds of the CVs (in the units of the CV). \
+            Defaults to None. \
+        time_min (int): The starting time step of simulation. Defaults to 0.
+        time_max (int, optional): The ending time step of simulation. Defaults to None.
     """
+
 
     def __init__(
         self,
@@ -84,9 +87,12 @@ class Fes:
         """generate CV map
 
         Args:
-            cv_range (Optional[List[float]], optional): The range of CV.
-            cv_indexes (Optional[List[int]], optional): \
-                Indexes of CV to be sum. Defaults to None.
+            cv_select (List[int], optional): \
+                A list of integers specifying which collective variables (CVs) should be used for FES calculation. \
+                Defaults to None.
+            cv_range (Optional[List[float]], optional): \
+                A list of two numbers defining the lower and upper bounds of the CVs (in the units of the CV). \
+                Defaults to None. \
 
         Returns:
             Tuple: cv_min, cv_max, cv_fes_range
@@ -135,7 +141,20 @@ class Fes:
         time_min: Optional[int] = None,
         time_max: Optional[int] = None
     ):
-        """calculate FES using fast algorithm"""
+        """Function used internally for summing hills in Hills object with the fast Bias Sum Algorithm. 
+
+        Args:
+            resolution (int, optional): \
+                The resolution of the free energy surface. Defaults to 256.
+            cv_select (List[int], optional): \
+                A list of integers specifying which collective variables (CVs) should be used for FES calculation. \
+                Defaults to None.
+            cv_range (List[float], optional): \
+                A list of two numbers defining the lower and upper bounds of the CVs (in the units of the CV). \
+                Defaults to None. \
+            time_min (int): The starting time step of simulation. Defaults to 0.
+            time_max (int, optional): The ending time step of simulation. Defaults to None.
+        """
 
         if resolution is None:
             resolution = self.res
@@ -207,7 +226,19 @@ class Fes:
         time_max: Optional[int] = None
     ):
         """
-        Function internally used to sum Hills in the same way as Plumed sum_hills. 
+        Function internally used to sum Hills in the same way as Plumed `sum_hills`. 
+
+        Args:
+            resolution (int, optional): \
+                The resolution of the free energy surface. Defaults to 256.
+            cv_select (List[int], optional): \
+                A list of integers specifying which collective variables (CVs) should be used for FES calculation. \
+                Defaults to None.
+            cv_range (List[float], optional): \
+                A list of two numbers defining the lower and upper bounds of the CVs (in the units of the CV). \
+                Defaults to None. \
+            time_min (int): The starting time step of simulation. Defaults to 0.
+            time_max (int, optional): The ending time step of simulation. Defaults to None.
         """
 
         if resolution is None:
@@ -252,34 +283,48 @@ class Fes:
         fes = fes - np.min(fes)
         self.fes = np.array(fes)
 
-    def plot(self, png_name=None, contours=True, contours_spacing=0.0, aspect=1.0, cmap="jet",
-             energy_unit="kJ/mol", xlabel=None, ylabel=None, zlabel=None, label_size=12, image_size=[10, 7],
-             vmin=0, vmax=None, opacity=0.2, levels=None):
+    def plot(
+        self,
+        png_name: Optional[str] = None,
+        contours: bool = True,
+        contours_spacing: float = 0.0,
+        aspect: float = 1.0,
+        cmap: str = "jet",
+        energy_unit: str = "kJ/mol",
+        xlabel: Optional[str] = None,
+        ylabel: Optional[str] = None,
+        zlabel: Optional[str] = None,
+        label_size: int = 12,
+        image_size: List[int] = [10, 7],
+        vmin: float = 0,
+        vmax: Optional[float] = None,
+        opacity: float = 0.2,
+        levels: Optional[List[float]] = None,
+    ):
         """
-        Function used to visualize FES, based on Matplotlib and PyVista. 
+        Visualizes the free energy surface (FES) using Matplotlib and PyVista.
 
+        Usage:
         ```python
         fes.plot()
         ```
 
-        Parameters:
-
-        - png_name = String. If this parameter is supplied, the picture of FES will be saved under this name to the current working directory.
-        - contours (default=True) = whether contours should be shown on 2D FES
-        - contours_spacing (default=0.0) = when a positive number is set, it will be used as spacing for contours on 2D FES. 
-                Otherwise, if contours=True, there will be five equally spaced contour levels.
-        - aspect (default = 1.0) = aspect ratio of the graph. Works with 1D and 2D FES. 
-        - cmap (default = "jet") = Matplotlib colormap used to color 2D or 3D FES
-        - energy_unit (default="kJ/mol") = String, used in description of colorbar
-        - xlabel, ylabel, zlabel = Strings, if provided, they will be used as labels for the graphs
-        - labelsize (default = 12) = size of text in labels
-        - image_size (default = [10,7]) = List of the width and height of the picture
-        - vmin (default=0) = real number, lower bound for the colormap on 2D FES
-        - vmax = real number, upper bound for the colormap on 2D FES
-        - opacity (default=0.2) = number between 0 and 1, is the opacity of isosurfaces of 3D FES
-        - levels = Here you can specify list of free energy values for isosurfaces on 3D FES. 
-                        If not provided, default values from contours parameters will be used instead. 
+        Args:
+            png_name (str, optional): If provided, the picture of FES will be saved under this name in the current working directory.
+            contours (bool, default=True): Determines whether contours should be shown on the 2D FES.
+            contours_spacing (float, default=0.0): When a positive number is set, it will be used as the spacing for contours on the 2D FES. Otherwise, if contours=True, there will be five equally spaced contour levels.
+            aspect (float, default=1.0): The aspect ratio of the graph. Works with 1D and 2D FES.
+            cmap (str, default="jet"): The Matplotlib colormap used to color the 2D or 3D FES.
+            energy_unit (str, default="kJ/mol"): The unit used in the description of the colorbar.
+            xlabel, ylabel, zlabel (str, optional): If provided, they will be used as labels for the graphs.
+            label_size (int, default=12): The size of text in the labels.
+            image_size (List[int], default=[10,7]): The width and height of the picture.
+            vmin (float, default=0): The lower bound for the colormap on the 2D FES.
+            vmax (float, optional): The upper bound for the colormap on the 2D FES.
+            opacity (float, default=0.2): A number between 0 and 1 that represents the opacity of isosurfaces in the 3D FES.
+            levels (List[float], optional): A list of free energy values for isosurfaces in the 3D FES. If not provided, default values from the contours parameters will be used instead.
         """
+
         import matplotlib.cm as cm
         import matplotlib.pyplot as plt
 
@@ -409,22 +454,36 @@ class Fes:
     def set_fes(self, fes):
         self.fes = fes
 
-    def surface_plot(self, cv_select=None, cv_range=None, cmap="jet",
-                     energy_unit="kJ/mol", xlabel=None, ylabel=None, zlabel=None,
-                     label_size=12, image_size=[12, 7], rstride=1, cstride=1, vmin=0, vmax=None):
+    def surface_plot(
+        self,
+        cv_select: Optional[None] = None,
+        cv_range: Optional[None] = None,
+        cmap: str = "jet",
+        energy_unit: str = "kJ/mol",
+        xlabel: Optional[str] = None,
+        ylabel: Optional[str] = None,
+        zlabel: Optional[str] = None,
+        label_size: int = 12,
+        image_size: List[int] = [12, 7],
+        rstride: int = 1,
+        cstride: int = 1,
+        vmin: int = 0,
+        vmax: Optional[int] = None,
+    ):
         """
-        Function for visualization of 2D FES as 3D surface plot. For now, it is based on Matplotlib, but there are issues with interactivity. 
+        Visualizes the 2D free energy surface (FES) as a 3D surface plot using Matplotlib.
 
-        It can be interacted with in jupyter notebook or jupyter lab in %matplotlib widget mode. Otherwise it is just static image of the 3D surface plot. 
+        Note: Interactivity is currently limited to jupyter notebook or jupyter lab in `%matplotlib widget` mode. Otherwise, it is a static image of the 3D surface plot.
 
+        Usage:
         ```python
         %matplotlib widget
         fes.surface_plot()
         ```
 
-        There are future plans to implement this function using PyVista. 
-        Hovewer, in current version of PyVista (0.38.5) there is an issue that labels on the 3rd axis for free energy are showing wrong values. 
+        Future plans include implementing this function using PyVista. However, in the current version of PyVista (0.38.5), there is an issue with labels on the 3rd axis for free energy showing wrong values.
         """
+
         import matplotlib.pyplot as plt
 
         if cv_select is None:
@@ -474,22 +533,29 @@ class Fes:
     def removeCV(
         self,
         CV: int,
-        energy_unit: str = "kJ/mol",
         kb: Optional[float] = None,
+        energy_unit: str = "kJ/mol",
         temp: float = 300.0
     ):
-        """
-        This function is used to remove a CV from an existing FES. The function first recalculates the FES to an array of probabilities. The probabilities 
-        are summed along the CV to be removed, and resulting probability distribution with 1 less dimension is converted back to FES. 
+        """Remove a CV from an existing FES. 
+        The function first recalculates the FES to an array of probabilities. 
+        The probabilities are summed along the CV to be removed, 
+        and resulting probability distribution with 1 less dimension 
+        is converted back to FES. 
 
         Interactivity was working in jupyter notebook/lab with "%matplotlib widget".
 
-        Parameters:
+        Args:
+            CV (int): the index of CV to be removed. 
+            energy_unit (str): has to be either "kJ/mol" or "kcal/mol". Defaults to be "kJ/mol".
+            kb (float, optional): the Boltzmann Constant in the energy unit. \
+                Defaults to be None, which will be set according to energy_unit.
+            temp (float) = temperature of the simulation in Kelvins.
 
-        - CV = integer, the index of CV to be removed. 
-        - energy_unit (default="kJ/mol") = has to be either "kJ/mol" or "kcal/mol"
-        - temp (default=300) = temperature of the simulation in Kelvins.
+        Return:
+            New `Fes` instance without the CV to be removed.
         """
+        
         print(f"Removing CV {CV}.")
 
         if self.fes is None:
@@ -528,27 +594,44 @@ class Fes:
             new_fes.cv_fes_range = self.cv_fes_range[mask]
             return new_fes
 
-    def make_gif(self, gif_name="FES.gif", cmap="jet",
-                 xlabel=None, ylabel=None, zlabel=None, label_size=12, image_size=[10, 7],
-                 opacity=0.2, levels=None, frames=64):
+    def make_gif(
+        self,
+        gif_name: str = "FES.gif",
+        cmap: str = "jet",
+        xlabel: Optional[str] = None,
+        ylabel: Optional[str] = None,
+        zlabel: Optional[str] = None,
+        label_size: int = 12,
+        image_size: List[int] = [10, 7],
+        opacity: float = 0.2,
+        levels: Optional[List[float]] = None,
+        frames: int = 64,
+    ):
         """
-        Function that generates animation of 3D FES showing different isosurfaces.
+        Generates an animation of the 3D free energy surface (FES) showing different isosurfaces.
 
+        Usage:
         ```python
         fes.make_gif()
         ```
 
-        Parameters:
-
-        - gif_name (default="FES.gif") = String. Name of the gif of FES that will be saved in the current working directory.
-        - cmap (default = "jet") = Matplotlib colormap used to color the 3D FES
-        - xlabel, ylabel, zlabel = Strings, if provided, they will be used as labels for the graph
-        - labelsize (default = 12) = size of text in labels
-        - image_size (default = [10,7]) = List of the width and height of the picture
-        - opacity (default = 0.2) = number between 0 and 1, is the opacity of isosurfaces of 3D FES
-        - levels = Here you can specify list of free energy values for isosurfaces on 3D FES. 
-                If not provided, default values from contours parameters will be used instead. 
-        - frames (default = 64) = Number of frames the animation will be made of. 
+        Args:
+            gif_name (str, default="FES.gif"): \
+                The name of the gif file of the FES that will be saved in the current working directory.
+            cmap (str, default="jet"): \
+                The Matplotlib colormap used to color the 3D FES.
+            xlabel, ylabel, zlabel (str, optional): \
+                If provided, they will be used as labels for the graph.
+            label_size (int, default=12): \
+                The size of text in the labels.
+            image_size (List[int], default=[10,7]): \
+                The width and height of the picture.
+            opacity (float, default=0.2): \
+                A number between 0 and 1 representing the opacity of isosurfaces in the 3D FES.
+            levels (List[float], optional): \
+                A list of free energy values for isosurfaces in the 3D FES. If not provided, default values from the contours parameters will be used instead.
+            frames (int, default=64): \
+                The number of frames the animation will be composed of.
         """
         try:
             import pyvista as pv
