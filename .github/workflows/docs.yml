@@ -21,7 +21,7 @@ jobs:
             - name: Install Dependencies and Build
               run: |
                 pip install .[docs]
-                portray as_html
+                python -m portray as_html
 
             - name: Deploy 🚀
               uses: JamesIves/github-pages-deploy-action@4.1.4
