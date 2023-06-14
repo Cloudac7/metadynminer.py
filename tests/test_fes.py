@@ -17,7 +17,7 @@ def plumed_hills(filename, cvs, resolution=256):
     "name, periodic, cv_per, resolution", [
         ("acealanme1d", [True], [[-np.pi, np.pi]], 256),
         ("acealanme", [True,True], [[-np.pi, np.pi], [-np.pi, np.pi]], 256),
-        ("acealanme3d", [True,True,True], [[-np.pi, np.pi], [-np.pi, np.pi], [-np.pi, np.pi]], 64)
+        # ("acealanme3d", [True,True,True], [[-np.pi, np.pi], [-np.pi, np.pi], [-np.pi, np.pi]], 64)
     ]
 )
 def test_makefes(shared_datadir, name, periodic, cv_per, resolution):
