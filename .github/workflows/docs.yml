@@ -1,32 +1,32 @@
-name: Deploy to Github Pages
-
-on:
-    push:
-        branches: [main]
-    pull_request:
-        branches: [main]
-
-jobs:
-    build:
+---
+    name: Docs publish
+    
+    on:
+      push:
+        branches:
+          - master
+          - release
+    
+    jobs:
+      deploy:
         runs-on: ubuntu-latest
-
         steps:
-            - uses: actions/checkout@v2
-
-            - name: Setup Python
-              uses: actions/setup-python@v2
-              with:
-                python-version: 3.9
-
-            - name: Install Dependencies and Build
-              run: |
-                pip install .[docs]
-                python -m portray as_html
-
-            - name: Deploy 🚀
-              uses: JamesIves/github-pages-deploy-action@4.1.4
-              with:
-                  branch: gh-pages
-                  folder: site
-                  clean: true
-                  single-commit: true
+          - name: Checkout code
+            uses: actions/checkout@v3
+    
+          - name: Install poetry
+            run: pipx install poetry
+    
+          - name: Setup Python
+            uses: actions/setup-python@v3
+            with:
+              python-version: "3.8"
+              cache: "poetry"
+    
+          - name: Install dependencies
+            run: |
+              poetry env use "3.8"
+              poetry install
+    
+          - name: Deploy docs
+            run: poetry run portray on_github_pages -f
