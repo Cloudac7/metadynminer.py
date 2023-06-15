@@ -1,27 +1,25 @@
----
-    name: Docs publish
-    
-    on:
-      push:
-        branches:
-          - master
-          - release
-    
-    jobs:
-      deploy:
-        runs-on: ubuntu-latest
-        steps:
-          - name: Checkout code
-            uses: actions/checkout@v3
-    
-          - name: Setup Python
-            uses: actions/setup-python@v2
-            with:
-              python-version: 3.9
+name: Docs publish
 
-          - name: Install Dependencies
-            run: |
-              pip install .[docs]
+on:
+  push:
+    branches:
+      - main
 
-          - name: Deploy docs
-            run: portray on_github_pages -f
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      - name: Install Dependencies
+        run: |
+          pip install .[docs]
+
+      - name: Deploy docs
+        run: portray on_github_pages -f
