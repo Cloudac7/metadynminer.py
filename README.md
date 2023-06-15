@@ -7,6 +7,23 @@ install:
 ```
 pip install metadynminer
 ```
+
+To support 3d plotting, please install with pyvista:
+
+```
+pip install metadynminer[3dplot]
+```
+
+> For MacOS arm64 users:
+> 
+> Please install vtk first using conda:
+> 
+> ```
+> conda install vtk
+> ```
+>
+> For there is no arm64 release for vtk now, as described [here](https://github.com/pyvista/pyvista/issues/4305).
+
 or 
 ```
 conda install -c jan8be metadynminer
@@ -15,27 +32,32 @@ conda install -c jan8be metadynminer
 Short sample code:
 
 ```python
+from metadynminer.hills import Hills
+from metadynminer.fes import Fes
+from metadynminer.minima import Minima
+from metadynminer.profile import FEProfile
+
 # load your HILLS file
-hillsfile = metadynminer.Hills(name="HILLS", periodic=[True,True])
+hills = Hills(name="HILLS", periodic=[True,True])
 
 # compute the free energy surface using the fast Bias Sum Algorithm
-fes = metadynminer.Fes(hillsfile)
+fes = Fes(hills)
 
 # you can also use slower (but exact) algorithm to sum the hills and compute the free energy surface 
 # with the option original=True. This algorithm was checked and it gives the same result 
 # (to the machine level precision) as the PLUMED sum_hills function (for plumed v2.8.0)
-fes2 = metadynminer.Fes(hillsfile, original=True)
+fes2 = Fes(hills, original=True)
 
 # visualize the free energy surface
 fes.plot()
 
 # find local minima on the FES and print them
-minima = metadynminer.Minima(fes)
+minima = Minima(fes)
 print(minima.minima)
 
 # You can also plot free energy profile to see, how the differences between each minima were evolving 
 # during the simulation. 
-fep = metadynminer.FEProfile(minima, hillsfile)
+fep = FEProfile(minima, hills)
 fep.plot()
 ```
 

@@ -14,19 +14,14 @@
           - name: Checkout code
             uses: actions/checkout@v3
     
-          - name: Install poetry
-            run: pipx install poetry
-    
           - name: Setup Python
-            uses: actions/setup-python@v3
+            uses: actions/setup-python@v2
             with:
-              python-version: "3.8"
-              cache: "poetry"
-    
-          - name: Install dependencies
+              python-version: 3.9
+
+          - name: Install Dependencies
             run: |
-              poetry env use "3.8"
-              poetry install
-    
+              pip install .[docs]
+
           - name: Deploy docs
-            run: poetry run portray on_github_pages -f
+            run: portray on_github_pages -f

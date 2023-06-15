@@ -1,33 +1,6 @@
-[tool.poetry]
-name = "metadynminer"
-version = "0.1.4"
-description = "Analyzing tool for deep learning based chemical research."
-authors = ["Jan Beránek <Jan1.Beranek@vscht.cz>"]
-license = "GPL-3.0"
-readme = "README.md"
-repository = "https://github.com/cloudac7/metadynminer"
-packages = [{include = "metadynminer"}]
-
-[tool.poetry.dependencies]
-python = "^3.8"
-numpy = ">=1.23.5"
-matplotlib = "^3.7.1"
-pandas = "^1.5.3"
-tqdm = "^4.62.3"
-
-[tool.poetry.group.test.dependencies]
-flake8 = "*"
-pytest = "*"
-pytest-datadir = "*"
-coverage = "*"
-
-[tool.poetry.group.docs.dependencies]
-portray = "*"
-mkdocs-jupyter = "*"
-
 [build-system]
-requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning"]
-build-backend = "poetry_dynamic_versioning.backend"
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
 
 [tool.portray]
 modules = ["metadynminer"]

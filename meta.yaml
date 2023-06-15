@@ -17,6 +17,7 @@ requirements:
     - matplotlib >=3.7.1
     - pyvista >=0.38.5
     - numpy >=1.23.5
+    - tqdm >=4.62.3
 
 about:
   home: https://github.com/Jan8be/metadynminer.py

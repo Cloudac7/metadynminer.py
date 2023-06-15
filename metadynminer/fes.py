@@ -59,6 +59,7 @@ class Fes:
             self.cvs = len(cv_select)
         else:
             cv_select = [i for i in range(self.hills.cvs)]
+            self.cvs = len(cv_select)
 
         if time_max != None:
             if time_max <= time_min:
@@ -101,6 +102,7 @@ class Fes:
             cv_select = list(range(self.cvs))
         
         self.cv_select = cv_select
+        self.cvs = len(cv_select)
 
         if cv_range is None:
             cv_min = self.hills.cv_min[cv_select]
@@ -396,7 +398,7 @@ class Fes:
             else:
                 plt.ylabel(ylabel, size=label_size)
 
-        elif self.cvs == 3:
+        elif cvs == 3:
             try:
                 import pyvista as pv
             except (ImportError, ModuleNotFoundError) as e:
