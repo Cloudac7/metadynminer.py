@@ -206,7 +206,7 @@ class Fes:
                 fes_index_to_edit[d] += cv_bins[d][line]
                 if not self.periodic[d]:
                     mask = np.where(
-                        (fes_index_to_edit[d] < 0) & (
+                        (fes_index_to_edit[d] < 0) + (
                             fes_index_to_edit[d] > resolution - 1)
                     )[0]
                     # if the cv is not periodic, remove the indexes outside the fes

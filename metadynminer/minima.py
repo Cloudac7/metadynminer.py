@@ -116,18 +116,22 @@ class Minima:
                     converted_index[self.periodic] = \
                         converted_index[self.periodic] % self.res
 
-                    mask = np.ones(self.cvs, dtype=float)
-                    mask[~self.periodic] = np.inf
-                    fes_mask = np.prod(mask)
+                    mask = np.where(
+                        (converted_index < 0) + (converted_index > self.res - 1)
+                    )[0]
 
-                    if product_index == tuple([1] * self.cvs):
+                    if len(mask) > 0:
                         around[product_index] = np.inf
+
+                    elif product_index == tuple([1] * self.cvs):
+                        around[product_index] = np.inf
+
                     else:
-                        around[product_index] = \
-                            self.fes[tuple(converted_index)] * fes_mask
-                if bin_min < around.all():
-                    min_cv = (((min_cv_b+0.5)/self.res)
-                              * (cv_max-cv_min))+cv_min
+                        around[product_index] = self.fes[tuple(
+                            converted_index)]
+
+                if (around > bin_min).all():
+                    min_cv = (((min_cv_b+0.5)/self.res) * (cv_max-cv_min))+cv_min
                     local_minima = np.concatenate([
                         [np.round(bin_min, 6)], min_cv_b, np.round(min_cv, 6)
                     ])
