@@ -1,0 +1,1486 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.3.1, mkdocs-material-8.5.4">
+    
+    
+      
+        <title>Profile - metadynminer.py</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.80dcb947.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.cbb835fc.min.css">
+        
+          
+          
+          <meta name="theme-color" content="#4cae4f">
+        
+      
+      
+
+    
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="green" data-md-color-accent="lightgreen">
+  
+    
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#module-metadynminerprofile" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="metadynminer.py" class="md-header__button md-logo" aria-label="metadynminer.py" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            metadynminer.py
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Profile
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Cloudac7/metadynminer.py" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    metadynminer.py
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="metadynminer.py" class="md-nav__button md-logo" aria-label="metadynminer.py" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    metadynminer.py
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Cloudac7/metadynminer.py" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    metadynminer.py
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        Home
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../docs/example/tutorial/" class="md-nav__link">
+        Tutorial
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3" type="checkbox" id="__nav_3" checked>
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3">
+          Reference
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Reference" data-md-level="1">
+        <label class="md-nav__title" for="__nav_3">
+          <span class="md-nav__icon md-icon"></span>
+          Reference
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3_1" type="checkbox" id="__nav_3_1" checked>
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3_1">
+          Metadynminer
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Metadynminer" data-md-level="2">
+        <label class="md-nav__title" for="__nav_3_1">
+          <span class="md-nav__icon md-icon"></span>
+          Metadynminer
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../fes/" class="md-nav__link">
+        Fes
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../hills/" class="md-nav__link">
+        Hills
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        Index
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../minima/" class="md-nav__link">
+        Minima
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Profile
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        Profile
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#classes" class="md-nav__link">
+    Classes
+  </a>
+  
+    <nav class="md-nav" aria-label="Classes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#feprofile" class="md-nav__link">
+    FEProfile
+  </a>
+  
+    <nav class="md-nav" aria-label="FEProfile">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#attributes" class="md-nav__link">
+    Attributes
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods" class="md-nav__link">
+    Methods
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#makefeprofile" class="md-nav__link">
+    makefeprofile
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plot" class="md-nav__link">
+    plot
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#classes" class="md-nav__link">
+    Classes
+  </a>
+  
+    <nav class="md-nav" aria-label="Classes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#feprofile" class="md-nav__link">
+    FEProfile
+  </a>
+  
+    <nav class="md-nav" aria-label="FEProfile">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#attributes" class="md-nav__link">
+    Attributes
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods" class="md-nav__link">
+    Methods
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#makefeprofile" class="md-nav__link">
+    makefeprofile
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plot" class="md-nav__link">
+    plot
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  <a href="https://github.com/Cloudac7/metadynminer.py/edit/main/reference/metadynminer/profile.md" title="Edit this page" class="md-content__button md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25Z"/></svg>
+  </a>
+
+
+<h1 id="module-metadynminerprofile">Module metadynminer.profile</h1>
+<details class="example">
+<summary>View Source</summary>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="kp">product</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">from</span> <span class="nn">metadynminer.hills</span> <span class="kn">import</span> <span class="n">Hills</span>
+
+<span class="kn">from</span> <span class="nn">metadynminer.minima</span> <span class="kn">import</span> <span class="n">Minima</span>
+
+<span class="k">class</span> <span class="nc">FEProfile</span><span class="p">:</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Free energy profile is a visualization of differences between local</span>
+
+<span class="sd">    minima points during metadynamics simulation. If the values seem</span>
+
+<span class="sd">    to converge to a mean value of the difference, it suggests,</span>
+
+<span class="sd">    but not fully proof, that the FES did converge to the correct shape.</span>
+
+<span class="sd">    Usage:</span>
+
+<span class="sd">    ```python</span>
+
+<span class="sd">    fep = metadynminer.FEProfile(minima, hillsfile)</span>
+
+<span class="sd">    ```</span>
+
+<span class="sd">    Args:</span>
+
+<span class="sd">        minima (Minima): `Minima` to be calculated the free energy profile for.</span>
+
+<span class="sd">        hillsfile (Hills): File of `Hills` to calculate the free energy profile from.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">minima</span><span class="p">:</span> <span class="n">Minima</span><span class="p">,</span> <span class="n">hills</span><span class="p">:</span> <span class="n">Hills</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">cvs</span> <span class="o">=</span> <span class="n">minima</span><span class="o">.</span><span class="n">cvs</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">res</span> <span class="o">=</span> <span class="n">minima</span><span class="o">.</span><span class="n">res</span>
+
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">minima</span><span class="o">.</span><span class="n">minima</span><span class="p">)</span> <span class="o">!=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+
+                <span class="s2">&quot;There is only one local minimum on the free energy surface.&quot;</span>
+
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">minima</span> <span class="o">=</span> <span class="n">minima</span><span class="o">.</span><span class="n">minima</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">periodic</span> <span class="o">=</span> <span class="n">minima</span><span class="o">.</span><span class="n">periodic</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">heights</span> <span class="o">=</span> <span class="n">hills</span><span class="o">.</span><span class="n">get_heights</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">cv_name</span> <span class="o">=</span> <span class="n">minima</span><span class="o">.</span><span class="n">cv_name</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">cv_min</span> <span class="o">=</span> <span class="n">minima</span><span class="o">.</span><span class="n">cv_min</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">cv_max</span> <span class="o">=</span> <span class="n">minima</span><span class="o">.</span><span class="n">cv_max</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">cv_per</span> <span class="o">=</span> <span class="n">minima</span><span class="o">.</span><span class="n">cv_per</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">=</span> <span class="n">hills</span><span class="o">.</span><span class="n">sigma</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">cv</span> <span class="o">=</span> <span class="n">hills</span><span class="o">.</span><span class="n">cv</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">makefeprofile</span><span class="p">(</span><span class="n">hills</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">makefeprofile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hills</span><span class="p">):</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        Internal method to calculate free energy profile.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">hillslenght</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">hills</span><span class="o">.</span><span class="n">cv</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">hillslenght</span> <span class="o">&lt;</span> <span class="mi">256</span><span class="p">:</span>
+
+            <span class="n">profilelenght</span> <span class="o">=</span> <span class="n">hillslenght</span>
+
+            <span class="n">scantimes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="kp">array</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">hillslenght</span><span class="p">))</span>
+
+        <span class="k">else</span><span class="p">:</span>
+
+            <span class="n">profilelenght</span> <span class="o">=</span> <span class="mi">256</span>
+
+            <span class="n">scantimes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="kp">array</span><span class="p">(</span>
+
+                <span class="p">((</span><span class="n">hillslenght</span><span class="o">/</span><span class="p">(</span><span class="n">profilelenght</span><span class="p">))</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="kp">array</span><span class="p">((</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">profilelenght</span><span class="o">+</span><span class="mi">1</span><span class="p">)))))</span>
+
+            <span class="n">scantimes</span> <span class="o">-=</span> <span class="mi">1</span>
+
+            <span class="n">scantimes</span> <span class="o">=</span> <span class="n">scantimes</span><span class="o">.</span><span class="kp">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+        <span class="n">number_of_minima</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">minima</span><span class="o">.</span><span class="kp">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">feprofile</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="kp">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">minima</span><span class="p">[</span><span class="s2">&quot;Minimum&quot;</span><span class="p">]</span><span class="o">.</span><span class="kp">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+
+        <span class="n">cvs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cvs</span>
+
+        <span class="n">cv_min</span><span class="p">,</span> <span class="n">cv_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cv_min</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cv_max</span>
+
+        <span class="n">cv_fes_range</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cv_max</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">cv_min</span>
+
+        <span class="n">fes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="kp">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">res</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">res</span><span class="p">))</span>
+
+        <span class="n">lasttime</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">line</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">for</span> <span class="n">time</span> <span class="ow">in</span> <span class="n">scantimes</span><span class="p">:</span>
+
+            <span class="n">minima_cv_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="kp">array</span><span class="p">(</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">minima</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="n">cvs</span><span class="o">+</span><span class="mi">2</span><span class="p">:</span><span class="mi">2</span><span class="o">*</span><span class="n">cvs</span><span class="o">+</span><span class="mi">2</span><span class="p">],</span> <span class="kp">dtype</span><span class="o">=</span><span class="nb">float</span>
+
+            <span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">coords</span> <span class="ow">in</span> <span class="kp">product</span><span class="p">(</span><span class="o">*</span><span class="n">minima_cv_matrix</span><span class="o">.</span><span class="n">T</span><span class="p">):</span>
+
+                <span class="n">dist_cvs</span> <span class="o">=</span> <span class="p">[]</span>
+
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">cvs</span><span class="p">):</span>
+
+                    <span class="n">dist_cv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cv</span><span class="p">[:,</span> <span class="n">i</span><span class="p">][</span><span class="n">lasttime</span><span class="p">:</span><span class="n">time</span><span class="p">]</span> <span class="o">-</span> <span class="n">coords</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">periodic</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+
+                        <span class="n">dist_cv</span><span class="p">[</span><span class="n">dist_cv</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mf">0.5</span><span class="o">*</span><span class="n">cv_fes_range</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+                                <span class="p">]</span> <span class="o">+=</span> <span class="n">cv_fes_range</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+                        <span class="n">dist_cv</span><span class="p">[</span><span class="n">dist_cv</span> <span class="o">&gt;</span> <span class="o">+</span><span class="mf">0.5</span><span class="o">*</span><span class="n">cv_fes_range</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+                                <span class="p">]</span> <span class="o">-=</span> <span class="n">cv_fes_range</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+                    <span class="n">dist_cvs</span><span class="o">.</span><span class="kp">append</span><span class="p">(</span><span class="n">dist_cv</span><span class="p">)</span>
+
+                <span class="n">dp2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="kp">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="kp">array</span><span class="p">(</span><span class="n">dist_cvs</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">/</span> \
+
+                    <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">][</span><span class="n">lasttime</span><span class="p">:</span><span class="n">time</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+
+                <span class="n">tmp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="kp">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cv</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">][</span><span class="n">lasttime</span><span class="p">:</span><span class="n">time</span><span class="p">]</span><span class="o">.</span><span class="kp">shape</span><span class="p">)</span>
+
+                <span class="n">tmp</span><span class="p">[</span><span class="n">dp2</span> <span class="o">&lt;</span> <span class="mf">2.5</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">heights</span><span class="p">[</span><span class="n">lasttime</span><span class="p">:</span><span class="n">time</span><span class="p">][</span><span class="n">dp2</span> <span class="o">&lt;</span> <span class="mf">2.5</span><span class="p">]</span> <span class="o">*</span> \
+
+                    <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="kp">exp</span><span class="p">(</span><span class="o">-</span><span class="n">dp2</span><span class="p">[</span><span class="n">dp2</span> <span class="o">&lt;</span> <span class="mf">2.5</span><span class="p">])</span> <span class="o">*</span>
+
+                     <span class="mf">1.00193418799744762399</span> <span class="o">-</span> <span class="mf">0.00193418799744762399</span><span class="p">)</span>
+
+                <span class="n">fes</span><span class="p">[</span><span class="nb">tuple</span><span class="p">([</span>
+
+                    <span class="nb">int</span><span class="p">((</span><span class="nb">float</span><span class="p">(</span><span class="n">coords</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">-</span><span class="n">cv_min</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">res</span><span class="o">/</span><span class="n">cv_fes_range</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">cvs</span><span class="p">)</span>
+
+                <span class="p">])]</span> <span class="o">-=</span> <span class="n">tmp</span><span class="o">.</span><span class="kp">sum</span><span class="p">()</span>
+
+            <span class="c1"># save profile</span>
+
+            <span class="n">profileline</span> <span class="o">=</span> <span class="p">[</span><span class="n">time</span><span class="p">]</span>
+
+            <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_minima</span><span class="p">):</span>
+
+                <span class="n">profile</span> <span class="o">=</span> <span class="n">fes</span><span class="p">[</span><span class="nb">tuple</span><span class="p">([</span>
+
+                    <span class="nb">int</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">minima</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">m</span><span class="p">,</span> <span class="n">i</span><span class="o">+</span><span class="mi">2</span><span class="p">]))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">cvs</span><span class="p">)</span>
+
+                <span class="p">])]</span> <span class="o">-</span> <span class="n">fes</span><span class="p">[</span><span class="nb">tuple</span><span class="p">([</span>
+
+                    <span class="nb">int</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">minima</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="o">+</span><span class="mi">2</span><span class="p">]))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">cvs</span><span class="p">)</span>
+
+                <span class="p">])]</span>
+
+                <span class="n">profileline</span><span class="o">.</span><span class="kp">append</span><span class="p">(</span><span class="n">profile</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">feprofile</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="kp">vstack</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">feprofile</span><span class="p">,</span> <span class="n">profileline</span><span class="p">])</span>
+
+            <span class="n">lasttime</span> <span class="o">=</span> <span class="n">time</span>
+
+    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span>
+
+        <span class="bp">self</span><span class="p">,</span>
+
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;FEProfile.png&quot;</span><span class="p">,</span>
+
+        <span class="n">image_size</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">7</span><span class="p">],</span>
+
+        <span class="n">xlabel</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+
+        <span class="n">ylabel</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+
+        <span class="n">label_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">12</span><span class="p">,</span>
+
+        <span class="n">cmap</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;jet&quot;</span><span class="p">,</span>
+
+    <span class="p">):</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        Visualization function for Free Energy Profile (FEP).</span>
+
+<span class="sd">        Usage:</span>
+
+<span class="sd">        ```python</span>
+
+<span class="sd">        fep.plot()</span>
+
+<span class="sd">        ```</span>
+
+<span class="sd">        Args:</span>
+
+<span class="sd">            name (str): Name for the .png file to save the plot to. Defaults to be &quot;FEProfile.png&quot;.</span>
+
+<span class="sd">            image_size (List[int]): List of two dimensions of the picture. Defaults to be [10, 7].</span>
+
+<span class="sd">            xlabel (str, optional): X-axis label. Defaults to be None.</span>
+
+<span class="sd">            ylabel (str, optional): Y-axis label. Defaults to be None.</span>
+
+<span class="sd">            label_size (int): Size of labels. Defaults to be 12.</span>
+
+<span class="sd">            cmap (str): Matplotlib colormap used for coloring the line of the minima. Defaults to be &quot;jet&quot;.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+        <span class="kn">import</span> <span class="nn">matplotlib.cm</span> <span class="k">as</span> <span class="nn">cm</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="n">image_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">image_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+
+        <span class="n">color_map</span> <span class="o">=</span> <span class="n">cm</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="n">cmap</span><span class="p">)</span>
+
+        <span class="c1"># colors = cm.jet((self.minima.iloc[:,1].to_numpy()).astype(float)/\</span>
+
+        <span class="c1">#                (np.max(self.minima.iloc[:,1].to_numpy().astype(float))))</span>
+
+        <span class="n">colors</span> <span class="o">=</span> <span class="n">color_map</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="kp">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">minima</span><span class="o">.</span><span class="kp">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">minima</span><span class="o">.</span><span class="kp">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+
+            <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">feprofile</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span>
+
+                     <span class="bp">self</span><span class="o">.</span><span class="n">feprofile</span><span class="p">[:,</span> <span class="n">m</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">colors</span><span class="p">[</span><span class="n">m</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">xlabel</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;time (ps)&#39;</span><span class="p">,</span> <span class="kp">size</span><span class="o">=</span><span class="n">label_size</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="n">xlabel</span><span class="p">,</span> <span class="kp">size</span><span class="o">=</span><span class="n">label_size</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">ylabel</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+
+            <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;free energy difference (kJ/mol)&#39;</span><span class="p">,</span> <span class="kp">size</span><span class="o">=</span><span class="n">label_size</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+
+            <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="n">ylabel</span><span class="p">,</span> <span class="kp">size</span><span class="o">=</span><span class="n">label_size</span><span class="p">)</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+</code></pre></div>
+
+</details>
+<h2 id="classes">Classes</h2>
+<h3 id="feprofile">FEProfile</h3>
+<div class="codehilite"><pre><span></span><code><span class="k">class</span> <span class="nc">FEProfile</span><span class="p">(</span>
+    <span class="n">minima</span><span class="p">:</span> <span class="n">metadynminer</span><span class="o">.</span><span class="n">minima</span><span class="o">.</span><span class="n">Minima</span><span class="p">,</span>
+    <span class="n">hills</span><span class="p">:</span> <span class="n">metadynminer</span><span class="o">.</span><span class="n">hills</span><span class="o">.</span><span class="n">Hills</span>
+<span class="p">)</span>
+</code></pre></div>
+
+<p>Free energy profile is a visualization of differences between local </p>
+<p>minima points during metadynamics simulation. If the values seem 
+to converge to a mean value of the difference, it suggests, 
+but not fully proof, that the FES did converge to the correct shape.</p>
+<p>Usage:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">fep</span> <span class="o">=</span> <span class="n">metadynminer</span><span class="o">.</span><span class="n">FEProfile</span><span class="p">(</span><span class="n">minima</span><span class="p">,</span> <span class="n">hillsfile</span><span class="p">)</span>
+</code></pre></div>
+
+<h4 id="attributes">Attributes</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>minima</td>
+<td>Minima</td>
+<td><code>Minima</code> to be calculated the free energy profile for.</td>
+<td>None</td>
+</tr>
+<tr>
+<td>hillsfile</td>
+<td>Hills</td>
+<td>File of <code>Hills</code> to calculate the free energy profile from.</td>
+<td>None</td>
+</tr>
+</tbody>
+</table>
+<details class="example">
+<summary>View Source</summary>
+<div class="codehilite"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nl">FEProfile</span><span class="p">:</span>
+
+<span class="w">    </span><span class="ss">&quot;&quot;&quot;</span>
+
+<span class="ss">    Free energy profile is a visualization of differences between local</span>
+
+<span class="ss">    minima points during metadynamics simulation. If the values seem</span>
+
+<span class="ss">    to converge to a mean value of the difference, it suggests,</span>
+
+<span class="ss">    but not fully proof, that the FES did converge to the correct shape.</span>
+
+<span class="ss">    Usage:</span>
+
+<span class="ss">    ```python</span>
+
+<span class="ss">    fep = metadynminer.FEProfile(minima, hillsfile)</span>
+
+<span class="ss">    ```</span>
+
+<span class="ss">    Args:</span>
+
+<span class="ss">        minima (Minima): `Minima` to be calculated the free energy profile for.</span>
+
+<span class="ss">        hillsfile (Hills): File of `Hills` to calculate the free energy profile from.</span>
+
+<span class="ss">    &quot;&quot;&quot;</span>
+
+<span class="w">    </span><span class="n">def</span><span class="w"> </span><span class="n">__init__</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="nl">minima</span><span class="p">:</span><span class="w"> </span><span class="n">Minima</span><span class="p">,</span><span class="w"> </span><span class="nl">hills</span><span class="p">:</span><span class="w"> </span><span class="n">Hills</span><span class="p">)</span><span class="err">:</span>
+
+<span class="w">        </span><span class="n">self</span><span class="p">.</span><span class="n">cvs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">minima</span><span class="p">.</span><span class="n">cvs</span>
+
+<span class="w">        </span><span class="n">self</span><span class="p">.</span><span class="n">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">minima</span><span class="p">.</span><span class="n">res</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="n">type</span><span class="p">(</span><span class="n">minima</span><span class="p">.</span><span class="n">minima</span><span class="p">)</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">pd</span><span class="p">.</span><span class="nl">DataFrame</span><span class="p">:</span>
+
+<span class="w">            </span><span class="n">raise</span><span class="w"> </span><span class="n">ValueError</span><span class="p">(</span>
+
+<span class="w">                </span><span class="ss">&quot;There is only one local minimum on the free energy surface.&quot;</span>
+
+<span class="w">            </span><span class="p">)</span>
+
+<span class="w">        </span><span class="n">self</span><span class="p">.</span><span class="n">minima</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">minima</span><span class="p">.</span><span class="n">minima</span>
+
+<span class="w">        </span><span class="n">self</span><span class="p">.</span><span class="n">periodic</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">minima</span><span class="p">.</span><span class="n">periodic</span>
+
+<span class="w">        </span><span class="n">self</span><span class="p">.</span><span class="n">heights</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">hills</span><span class="p">.</span><span class="n">get_heights</span><span class="p">()</span>
+
+<span class="w">        </span><span class="n">self</span><span class="p">.</span><span class="n">cv_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">minima</span><span class="p">.</span><span class="n">cv_name</span>
+
+<span class="w">        </span><span class="n">self</span><span class="p">.</span><span class="n">cv_min</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">minima</span><span class="p">.</span><span class="n">cv_min</span>
+
+<span class="w">        </span><span class="n">self</span><span class="p">.</span><span class="n">cv_max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">minima</span><span class="p">.</span><span class="n">cv_max</span>
+
+<span class="w">        </span><span class="n">self</span><span class="p">.</span><span class="n">cv_per</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">minima</span><span class="p">.</span><span class="n">cv_per</span>
+
+<span class="w">        </span><span class="n">self</span><span class="p">.</span><span class="n">sigma</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">hills</span><span class="p">.</span><span class="n">sigma</span>
+
+<span class="w">        </span><span class="n">self</span><span class="p">.</span><span class="n">cv</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">hills</span><span class="p">.</span><span class="n">cv</span>
+
+<span class="w">        </span><span class="n">self</span><span class="p">.</span><span class="n">makefeprofile</span><span class="p">(</span><span class="n">hills</span><span class="p">)</span>
+
+<span class="w">    </span><span class="n">def</span><span class="w"> </span><span class="n">makefeprofile</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="n">hills</span><span class="p">)</span><span class="err">:</span>
+
+<span class="w">        </span><span class="ss">&quot;&quot;&quot;</span>
+
+<span class="ss">        Internal method to calculate free energy profile.</span>
+
+<span class="ss">        &quot;&quot;&quot;</span>
+
+<span class="w">        </span><span class="n">hillslenght</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">len</span><span class="p">(</span><span class="n">hills</span><span class="p">.</span><span class="n">cv</span><span class="o">[</span><span class="n">:, 0</span><span class="o">]</span><span class="p">)</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="n">hillslenght</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">256</span><span class="err">:</span>
+
+<span class="w">            </span><span class="n">profilelenght</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">hillslenght</span>
+
+<span class="w">            </span><span class="n">scantimes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">np</span><span class="p">.</span><span class="k">array</span><span class="p">(</span><span class="k">range</span><span class="p">(</span><span class="n">hillslenght</span><span class="p">))</span>
+
+<span class="w">        </span><span class="k">else</span><span class="err">:</span>
+
+<span class="w">            </span><span class="n">profilelenght</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">256</span>
+
+<span class="w">            </span><span class="n">scantimes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">np</span><span class="p">.</span><span class="k">array</span><span class="p">(</span>
+
+<span class="w">                </span><span class="p">((</span><span class="n">hillslenght</span><span class="o">/</span><span class="p">(</span><span class="n">profilelenght</span><span class="p">))</span><span class="o">*</span><span class="n">np</span><span class="p">.</span><span class="k">array</span><span class="p">((</span><span class="k">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">profilelenght</span><span class="o">+</span><span class="mi">1</span><span class="p">)))))</span>
+
+<span class="w">            </span><span class="n">scantimes</span><span class="w"> </span><span class="o">-=</span><span class="w"> </span><span class="mi">1</span>
+
+<span class="w">            </span><span class="n">scantimes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scantimes</span><span class="p">.</span><span class="n">astype</span><span class="p">(</span><span class="nc">int</span><span class="p">)</span>
+
+<span class="w">        </span><span class="n">number_of_minima</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">self</span><span class="p">.</span><span class="n">minima</span><span class="p">.</span><span class="n">shape</span><span class="o">[</span><span class="n">0</span><span class="o">]</span>
+
+<span class="w">        </span><span class="n">self</span><span class="p">.</span><span class="n">feprofile</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">np</span><span class="p">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">self</span><span class="p">.</span><span class="n">minima</span><span class="o">[</span><span class="n">&quot;Minimum&quot;</span><span class="o">]</span><span class="p">.</span><span class="n">shape</span><span class="o">[</span><span class="n">0</span><span class="o">]+</span><span class="mi">1</span><span class="p">))</span>
+
+<span class="w">        </span><span class="n">cvs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">self</span><span class="p">.</span><span class="n">cvs</span>
+
+<span class="w">        </span><span class="n">cv_min</span><span class="p">,</span><span class="w"> </span><span class="n">cv_max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">self</span><span class="p">.</span><span class="n">cv_min</span><span class="p">,</span><span class="w"> </span><span class="n">self</span><span class="p">.</span><span class="n">cv_max</span>
+
+<span class="w">        </span><span class="n">cv_fes_range</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">self</span><span class="p">.</span><span class="n">cv_max</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">self</span><span class="p">.</span><span class="n">cv_min</span>
+
+<span class="w">        </span><span class="n">fes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">np</span><span class="p">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">self</span><span class="p">.</span><span class="n">res</span><span class="p">,</span><span class="w"> </span><span class="n">self</span><span class="p">.</span><span class="n">res</span><span class="p">))</span>
+
+<span class="w">        </span><span class="n">lasttime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span>
+
+<span class="w">        </span><span class="n">line</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span>
+
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="nc">time</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="nl">scantimes</span><span class="p">:</span>
+
+<span class="w">            </span><span class="n">minima_cv_matrix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">np</span><span class="p">.</span><span class="k">array</span><span class="p">(</span>
+
+<span class="w">                </span><span class="n">self</span><span class="p">.</span><span class="n">minima</span><span class="p">.</span><span class="n">iloc</span><span class="o">[</span><span class="n">:, cvs+2:2*cvs+2</span><span class="o">]</span><span class="p">,</span><span class="w"> </span><span class="n">dtype</span><span class="o">=</span><span class="nc">float</span>
+
+<span class="w">            </span><span class="p">)</span>
+
+<span class="w">            </span><span class="k">for</span><span class="w"> </span><span class="n">coords</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="n">minima_cv_matrix</span><span class="p">.</span><span class="n">T</span><span class="p">)</span><span class="err">:</span>
+
+<span class="w">                </span><span class="n">dist_cvs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="err">[]</span>
+
+<span class="w">                </span><span class="k">for</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="k">range</span><span class="p">(</span><span class="n">cvs</span><span class="p">)</span><span class="err">:</span>
+
+<span class="w">                    </span><span class="n">dist_cv</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">self</span><span class="p">.</span><span class="n">cv</span><span class="o">[</span><span class="n">:, i</span><span class="o">][</span><span class="n">lasttime:time</span><span class="o">]</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">coords</span><span class="o">[</span><span class="n">i</span><span class="o">]</span>
+
+<span class="w">                    </span><span class="k">if</span><span class="w"> </span><span class="n">self</span><span class="p">.</span><span class="n">periodic</span><span class="o">[</span><span class="n">i</span><span class="o">]</span><span class="err">:</span>
+
+<span class="w">                        </span><span class="n">dist_cv</span><span class="o">[</span><span class="n">dist_cv &lt; -0.5*cv_fes_range[i</span><span class="o">]</span>
+
+<span class="w">                                </span><span class="err">]</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">cv_fes_range</span><span class="o">[</span><span class="n">i</span><span class="o">]</span>
+
+<span class="w">                        </span><span class="n">dist_cv</span><span class="o">[</span><span class="n">dist_cv &gt; +0.5*cv_fes_range[i</span><span class="o">]</span>
+
+<span class="w">                                </span><span class="err">]</span><span class="w"> </span><span class="o">-=</span><span class="w"> </span><span class="n">cv_fes_range</span><span class="o">[</span><span class="n">i</span><span class="o">]</span>
+
+<span class="w">                    </span><span class="n">dist_cvs</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">dist_cv</span><span class="p">)</span>
+
+<span class="w">                </span><span class="n">dp2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">np</span><span class="p">.</span><span class="nf">sum</span><span class="p">(</span><span class="n">np</span><span class="p">.</span><span class="k">array</span><span class="p">(</span><span class="n">dist_cvs</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="err">\</span>
+
+<span class="w">                    </span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">self</span><span class="p">.</span><span class="n">sigma</span><span class="o">[</span><span class="n">:, 0</span><span class="o">][</span><span class="n">lasttime:time</span><span class="o">]**</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="w">                </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">np</span><span class="p">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">cv</span><span class="o">[</span><span class="n">:, 0</span><span class="o">][</span><span class="n">lasttime:time</span><span class="o">]</span><span class="p">.</span><span class="n">shape</span><span class="p">)</span>
+
+<span class="w">                </span><span class="n">tmp</span><span class="o">[</span><span class="n">dp2 &lt; 2.5</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">self</span><span class="p">.</span><span class="n">heights</span><span class="o">[</span><span class="n">lasttime:time</span><span class="o">][</span><span class="n">dp2 &lt; 2.5</span><span class="o">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="err">\</span>
+
+<span class="w">                    </span><span class="p">(</span><span class="n">np</span><span class="p">.</span><span class="nf">exp</span><span class="p">(</span><span class="o">-</span><span class="n">dp2</span><span class="o">[</span><span class="n">dp2 &lt; 2.5</span><span class="o">]</span><span class="p">)</span><span class="w"> </span><span class="o">*</span>
+
+<span class="w">                     </span><span class="mf">1.00193418799744762399</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">0.00193418799744762399</span><span class="p">)</span>
+
+<span class="w">                </span><span class="n">fes</span><span class="o">[</span><span class="n">tuple([</span>
+
+<span class="n">                    int((float(coords[i</span><span class="o">]</span><span class="p">)</span><span class="o">-</span><span class="n">cv_min</span><span class="o">[</span><span class="n">i</span><span class="o">]</span><span class="p">)</span><span class="o">*</span><span class="n">self</span><span class="p">.</span><span class="n">res</span><span class="o">/</span><span class="n">cv_fes_range</span><span class="o">[</span><span class="n">i</span><span class="o">]</span><span class="p">)</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="k">range</span><span class="p">(</span><span class="n">cvs</span><span class="p">)</span>
+
+<span class="w">                </span><span class="err">]</span><span class="p">)</span><span class="err">]</span><span class="w"> </span><span class="o">-=</span><span class="w"> </span><span class="n">tmp</span><span class="p">.</span><span class="nf">sum</span><span class="p">()</span>
+
+<span class="w">            </span><span class="err">#</span><span class="w"> </span><span class="k">save</span><span class="w"> </span><span class="n">profile</span>
+
+<span class="w">            </span><span class="n">profileline</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">[</span><span class="n">time</span><span class="o">]</span>
+
+<span class="w">            </span><span class="k">for</span><span class="w"> </span><span class="n">m</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="k">range</span><span class="p">(</span><span class="n">number_of_minima</span><span class="p">)</span><span class="err">:</span>
+
+<span class="w">                </span><span class="n">profile</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fes</span><span class="o">[</span><span class="n">tuple([</span>
+
+<span class="n">                    int(float(self.minima.iloc[m, i+2</span><span class="o">]</span><span class="p">))</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="k">range</span><span class="p">(</span><span class="n">cvs</span><span class="p">)</span>
+
+<span class="w">                </span><span class="err">]</span><span class="p">)</span><span class="err">]</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">fes</span><span class="o">[</span><span class="n">tuple([</span>
+
+<span class="n">                    int(float(self.minima.iloc[0, i+2</span><span class="o">]</span><span class="p">))</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="k">range</span><span class="p">(</span><span class="n">cvs</span><span class="p">)</span>
+
+<span class="w">                </span><span class="err">]</span><span class="p">)</span><span class="err">]</span>
+
+<span class="w">                </span><span class="n">profileline</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">profile</span><span class="p">)</span>
+
+<span class="w">            </span><span class="n">self</span><span class="p">.</span><span class="n">feprofile</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">np</span><span class="p">.</span><span class="n">vstack</span><span class="p">(</span><span class="o">[</span><span class="n">self.feprofile, profileline</span><span class="o">]</span><span class="p">)</span>
+
+<span class="w">            </span><span class="n">lasttime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">time</span>
+
+<span class="w">    </span><span class="n">def</span><span class="w"> </span><span class="n">plot</span><span class="p">(</span>
+
+<span class="w">        </span><span class="n">self</span><span class="p">,</span>
+
+<span class="w">        </span><span class="nl">name</span><span class="p">:</span><span class="w"> </span><span class="nf">str</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ss">&quot;FEProfile.png&quot;</span><span class="p">,</span>
+
+<span class="w">        </span><span class="nl">image_size</span><span class="p">:</span><span class="w"> </span><span class="n">List</span><span class="o">[</span><span class="n">int</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">[</span><span class="n">10, 7</span><span class="o">]</span><span class="p">,</span>
+
+<span class="w">        </span><span class="nl">xlabel</span><span class="p">:</span><span class="w"> </span><span class="n">Optional</span><span class="o">[</span><span class="n">str</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">None</span><span class="p">,</span>
+
+<span class="w">        </span><span class="nl">ylabel</span><span class="p">:</span><span class="w"> </span><span class="n">Optional</span><span class="o">[</span><span class="n">str</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">None</span><span class="p">,</span>
+
+<span class="w">        </span><span class="nl">label_size</span><span class="p">:</span><span class="w"> </span><span class="nc">int</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">12</span><span class="p">,</span>
+
+<span class="w">        </span><span class="nl">cmap</span><span class="p">:</span><span class="w"> </span><span class="nf">str</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ss">&quot;jet&quot;</span><span class="p">,</span>
+
+<span class="w">    </span><span class="p">)</span><span class="err">:</span>
+
+<span class="w">        </span><span class="ss">&quot;&quot;&quot;</span>
+
+<span class="ss">        Visualization function for Free Energy Profile (FEP).</span>
+
+<span class="ss">        Usage:</span>
+
+<span class="ss">        ```python</span>
+
+<span class="ss">        fep.plot()</span>
+
+<span class="ss">        ```</span>
+
+<span class="ss">        Args:</span>
+
+<span class="ss">            name (str): Name for the .png file to save the plot to. Defaults to be &quot;</span><span class="n">FEProfile</span><span class="p">.</span><span class="n">png</span><span class="ss">&quot;.</span>
+
+<span class="ss">            image_size (List[int]): List of two dimensions of the picture. Defaults to be [10, 7].</span>
+
+<span class="ss">            xlabel (str, optional): X-axis label. Defaults to be None.</span>
+
+<span class="ss">            ylabel (str, optional): Y-axis label. Defaults to be None.</span>
+
+<span class="ss">            label_size (int): Size of labels. Defaults to be 12.</span>
+
+<span class="ss">            cmap (str): Matplotlib colormap used for coloring the line of the minima. Defaults to be &quot;</span><span class="n">jet</span><span class="ss">&quot;.</span>
+
+<span class="ss">        &quot;&quot;&quot;</span>
+
+<span class="w">        </span><span class="n">import</span><span class="w"> </span><span class="n">matplotlib</span><span class="p">.</span><span class="n">pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">plt</span>
+
+<span class="w">        </span><span class="n">import</span><span class="w"> </span><span class="n">matplotlib</span><span class="p">.</span><span class="n">cm</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">cm</span>
+
+<span class="w">        </span><span class="n">plt</span><span class="p">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="n">image_size</span><span class="o">[</span><span class="n">0</span><span class="o">]</span><span class="p">,</span><span class="w"> </span><span class="n">image_size</span><span class="o">[</span><span class="n">1</span><span class="o">]</span><span class="p">))</span>
+
+<span class="w">        </span><span class="n">color_map</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cm</span><span class="p">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="n">cmap</span><span class="p">)</span>
+
+<span class="w">        </span><span class="err">#</span><span class="w"> </span><span class="n">colors</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cm</span><span class="p">.</span><span class="n">jet</span><span class="p">((</span><span class="n">self</span><span class="p">.</span><span class="n">minima</span><span class="p">.</span><span class="n">iloc</span><span class="o">[</span><span class="n">:,1</span><span class="o">]</span><span class="p">.</span><span class="n">to_numpy</span><span class="p">()).</span><span class="n">astype</span><span class="p">(</span><span class="nc">float</span><span class="p">)</span><span class="o">/</span><span class="err">\</span>
+
+<span class="w">        </span><span class="err">#</span><span class="w">                </span><span class="p">(</span><span class="n">np</span><span class="p">.</span><span class="nf">max</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">minima</span><span class="p">.</span><span class="n">iloc</span><span class="o">[</span><span class="n">:,1</span><span class="o">]</span><span class="p">.</span><span class="n">to_numpy</span><span class="p">().</span><span class="n">astype</span><span class="p">(</span><span class="nc">float</span><span class="p">))))</span>
+
+<span class="w">        </span><span class="n">colors</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">color_map</span><span class="p">(</span><span class="n">np</span><span class="p">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">self</span><span class="p">.</span><span class="n">minima</span><span class="p">.</span><span class="n">shape</span><span class="o">[</span><span class="n">0</span><span class="o">]</span><span class="p">))</span>
+
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="n">m</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="k">range</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">minima</span><span class="p">.</span><span class="n">shape</span><span class="o">[</span><span class="n">0</span><span class="o">]</span><span class="p">)</span><span class="err">:</span>
+
+<span class="w">            </span><span class="n">plt</span><span class="p">.</span><span class="n">plot</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">feprofile</span><span class="o">[</span><span class="n">:, 0</span><span class="o">]</span><span class="p">,</span>
+
+<span class="w">                     </span><span class="n">self</span><span class="p">.</span><span class="n">feprofile</span><span class="o">[</span><span class="n">:, m+1</span><span class="o">]</span><span class="p">,</span><span class="w"> </span><span class="n">color</span><span class="o">=</span><span class="n">colors</span><span class="o">[</span><span class="n">m</span><span class="o">]</span><span class="p">)</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="n">xlabel</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="k">None</span><span class="err">:</span>
+
+<span class="w">            </span><span class="n">plt</span><span class="p">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;time (ps)&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">size</span><span class="o">=</span><span class="n">label_size</span><span class="p">)</span>
+
+<span class="w">        </span><span class="k">else</span><span class="err">:</span>
+
+<span class="w">            </span><span class="n">plt</span><span class="p">.</span><span class="n">xlabel</span><span class="p">(</span><span class="n">xlabel</span><span class="p">,</span><span class="w"> </span><span class="k">size</span><span class="o">=</span><span class="n">label_size</span><span class="p">)</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="n">ylabel</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="k">None</span><span class="err">:</span>
+
+<span class="w">            </span><span class="n">plt</span><span class="p">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;free energy difference (kJ/mol)&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">size</span><span class="o">=</span><span class="n">label_size</span><span class="p">)</span>
+
+<span class="w">        </span><span class="k">else</span><span class="err">:</span>
+
+<span class="w">            </span><span class="n">plt</span><span class="p">.</span><span class="n">ylabel</span><span class="p">(</span><span class="n">ylabel</span><span class="p">,</span><span class="w"> </span><span class="k">size</span><span class="o">=</span><span class="n">label_size</span><span class="p">)</span>
+
+<span class="w">        </span><span class="n">plt</span><span class="p">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+</code></pre></div>
+
+</details>
+<hr />
+<h4 id="methods">Methods</h4>
+<h4 id="makefeprofile">makefeprofile</h4>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">makefeprofile</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">hills</span>
+<span class="p">)</span>
+</code></pre></div>
+
+<p>Internal method to calculate free energy profile.</p>
+<details class="example">
+<summary>View Source</summary>
+<div class="codehilite"><pre><span></span><code><span class="w">    </span><span class="n">def</span><span class="w"> </span><span class="n">makefeprofile</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="n">hills</span><span class="p">)</span><span class="err">:</span>
+
+<span class="w">        </span><span class="ss">&quot;&quot;&quot;</span>
+
+<span class="ss">        Internal method to calculate free energy profile.</span>
+
+<span class="ss">        &quot;&quot;&quot;</span>
+
+<span class="w">        </span><span class="n">hillslenght</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">len</span><span class="p">(</span><span class="n">hills</span><span class="p">.</span><span class="n">cv</span><span class="o">[</span><span class="n">:, 0</span><span class="o">]</span><span class="p">)</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="n">hillslenght</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">256</span><span class="err">:</span>
+
+<span class="w">            </span><span class="n">profilelenght</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">hillslenght</span>
+
+<span class="w">            </span><span class="n">scantimes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">np</span><span class="p">.</span><span class="k">array</span><span class="p">(</span><span class="k">range</span><span class="p">(</span><span class="n">hillslenght</span><span class="p">))</span>
+
+<span class="w">        </span><span class="k">else</span><span class="err">:</span>
+
+<span class="w">            </span><span class="n">profilelenght</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">256</span>
+
+<span class="w">            </span><span class="n">scantimes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">np</span><span class="p">.</span><span class="k">array</span><span class="p">(</span>
+
+<span class="w">                </span><span class="p">((</span><span class="n">hillslenght</span><span class="o">/</span><span class="p">(</span><span class="n">profilelenght</span><span class="p">))</span><span class="o">*</span><span class="n">np</span><span class="p">.</span><span class="k">array</span><span class="p">((</span><span class="k">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">profilelenght</span><span class="o">+</span><span class="mi">1</span><span class="p">)))))</span>
+
+<span class="w">            </span><span class="n">scantimes</span><span class="w"> </span><span class="o">-=</span><span class="w"> </span><span class="mi">1</span>
+
+<span class="w">            </span><span class="n">scantimes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scantimes</span><span class="p">.</span><span class="n">astype</span><span class="p">(</span><span class="nc">int</span><span class="p">)</span>
+
+<span class="w">        </span><span class="n">number_of_minima</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">self</span><span class="p">.</span><span class="n">minima</span><span class="p">.</span><span class="n">shape</span><span class="o">[</span><span class="n">0</span><span class="o">]</span>
+
+<span class="w">        </span><span class="n">self</span><span class="p">.</span><span class="n">feprofile</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">np</span><span class="p">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">self</span><span class="p">.</span><span class="n">minima</span><span class="o">[</span><span class="n">&quot;Minimum&quot;</span><span class="o">]</span><span class="p">.</span><span class="n">shape</span><span class="o">[</span><span class="n">0</span><span class="o">]+</span><span class="mi">1</span><span class="p">))</span>
+
+<span class="w">        </span><span class="n">cvs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">self</span><span class="p">.</span><span class="n">cvs</span>
+
+<span class="w">        </span><span class="n">cv_min</span><span class="p">,</span><span class="w"> </span><span class="n">cv_max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">self</span><span class="p">.</span><span class="n">cv_min</span><span class="p">,</span><span class="w"> </span><span class="n">self</span><span class="p">.</span><span class="n">cv_max</span>
+
+<span class="w">        </span><span class="n">cv_fes_range</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">self</span><span class="p">.</span><span class="n">cv_max</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">self</span><span class="p">.</span><span class="n">cv_min</span>
+
+<span class="w">        </span><span class="n">fes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">np</span><span class="p">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">self</span><span class="p">.</span><span class="n">res</span><span class="p">,</span><span class="w"> </span><span class="n">self</span><span class="p">.</span><span class="n">res</span><span class="p">))</span>
+
+<span class="w">        </span><span class="n">lasttime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span>
+
+<span class="w">        </span><span class="n">line</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span>
+
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="nc">time</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="nl">scantimes</span><span class="p">:</span>
+
+<span class="w">            </span><span class="n">minima_cv_matrix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">np</span><span class="p">.</span><span class="k">array</span><span class="p">(</span>
+
+<span class="w">                </span><span class="n">self</span><span class="p">.</span><span class="n">minima</span><span class="p">.</span><span class="n">iloc</span><span class="o">[</span><span class="n">:, cvs+2:2*cvs+2</span><span class="o">]</span><span class="p">,</span><span class="w"> </span><span class="n">dtype</span><span class="o">=</span><span class="nc">float</span>
+
+<span class="w">            </span><span class="p">)</span>
+
+<span class="w">            </span><span class="k">for</span><span class="w"> </span><span class="n">coords</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="n">minima_cv_matrix</span><span class="p">.</span><span class="n">T</span><span class="p">)</span><span class="err">:</span>
+
+<span class="w">                </span><span class="n">dist_cvs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="err">[]</span>
+
+<span class="w">                </span><span class="k">for</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="k">range</span><span class="p">(</span><span class="n">cvs</span><span class="p">)</span><span class="err">:</span>
+
+<span class="w">                    </span><span class="n">dist_cv</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">self</span><span class="p">.</span><span class="n">cv</span><span class="o">[</span><span class="n">:, i</span><span class="o">][</span><span class="n">lasttime:time</span><span class="o">]</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">coords</span><span class="o">[</span><span class="n">i</span><span class="o">]</span>
+
+<span class="w">                    </span><span class="k">if</span><span class="w"> </span><span class="n">self</span><span class="p">.</span><span class="n">periodic</span><span class="o">[</span><span class="n">i</span><span class="o">]</span><span class="err">:</span>
+
+<span class="w">                        </span><span class="n">dist_cv</span><span class="o">[</span><span class="n">dist_cv &lt; -0.5*cv_fes_range[i</span><span class="o">]</span>
+
+<span class="w">                                </span><span class="err">]</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">cv_fes_range</span><span class="o">[</span><span class="n">i</span><span class="o">]</span>
+
+<span class="w">                        </span><span class="n">dist_cv</span><span class="o">[</span><span class="n">dist_cv &gt; +0.5*cv_fes_range[i</span><span class="o">]</span>
+
+<span class="w">                                </span><span class="err">]</span><span class="w"> </span><span class="o">-=</span><span class="w"> </span><span class="n">cv_fes_range</span><span class="o">[</span><span class="n">i</span><span class="o">]</span>
+
+<span class="w">                    </span><span class="n">dist_cvs</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">dist_cv</span><span class="p">)</span>
+
+<span class="w">                </span><span class="n">dp2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">np</span><span class="p">.</span><span class="nf">sum</span><span class="p">(</span><span class="n">np</span><span class="p">.</span><span class="k">array</span><span class="p">(</span><span class="n">dist_cvs</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="err">\</span>
+
+<span class="w">                    </span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">self</span><span class="p">.</span><span class="n">sigma</span><span class="o">[</span><span class="n">:, 0</span><span class="o">][</span><span class="n">lasttime:time</span><span class="o">]**</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="w">                </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">np</span><span class="p">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">cv</span><span class="o">[</span><span class="n">:, 0</span><span class="o">][</span><span class="n">lasttime:time</span><span class="o">]</span><span class="p">.</span><span class="n">shape</span><span class="p">)</span>
+
+<span class="w">                </span><span class="n">tmp</span><span class="o">[</span><span class="n">dp2 &lt; 2.5</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">self</span><span class="p">.</span><span class="n">heights</span><span class="o">[</span><span class="n">lasttime:time</span><span class="o">][</span><span class="n">dp2 &lt; 2.5</span><span class="o">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="err">\</span>
+
+<span class="w">                    </span><span class="p">(</span><span class="n">np</span><span class="p">.</span><span class="nf">exp</span><span class="p">(</span><span class="o">-</span><span class="n">dp2</span><span class="o">[</span><span class="n">dp2 &lt; 2.5</span><span class="o">]</span><span class="p">)</span><span class="w"> </span><span class="o">*</span>
+
+<span class="w">                     </span><span class="mf">1.00193418799744762399</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">0.00193418799744762399</span><span class="p">)</span>
+
+<span class="w">                </span><span class="n">fes</span><span class="o">[</span><span class="n">tuple([</span>
+
+<span class="n">                    int((float(coords[i</span><span class="o">]</span><span class="p">)</span><span class="o">-</span><span class="n">cv_min</span><span class="o">[</span><span class="n">i</span><span class="o">]</span><span class="p">)</span><span class="o">*</span><span class="n">self</span><span class="p">.</span><span class="n">res</span><span class="o">/</span><span class="n">cv_fes_range</span><span class="o">[</span><span class="n">i</span><span class="o">]</span><span class="p">)</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="k">range</span><span class="p">(</span><span class="n">cvs</span><span class="p">)</span>
+
+<span class="w">                </span><span class="err">]</span><span class="p">)</span><span class="err">]</span><span class="w"> </span><span class="o">-=</span><span class="w"> </span><span class="n">tmp</span><span class="p">.</span><span class="nf">sum</span><span class="p">()</span>
+
+<span class="w">            </span><span class="err">#</span><span class="w"> </span><span class="k">save</span><span class="w"> </span><span class="n">profile</span>
+
+<span class="w">            </span><span class="n">profileline</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">[</span><span class="n">time</span><span class="o">]</span>
+
+<span class="w">            </span><span class="k">for</span><span class="w"> </span><span class="n">m</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="k">range</span><span class="p">(</span><span class="n">number_of_minima</span><span class="p">)</span><span class="err">:</span>
+
+<span class="w">                </span><span class="n">profile</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fes</span><span class="o">[</span><span class="n">tuple([</span>
+
+<span class="n">                    int(float(self.minima.iloc[m, i+2</span><span class="o">]</span><span class="p">))</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="k">range</span><span class="p">(</span><span class="n">cvs</span><span class="p">)</span>
+
+<span class="w">                </span><span class="err">]</span><span class="p">)</span><span class="err">]</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">fes</span><span class="o">[</span><span class="n">tuple([</span>
+
+<span class="n">                    int(float(self.minima.iloc[0, i+2</span><span class="o">]</span><span class="p">))</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="k">range</span><span class="p">(</span><span class="n">cvs</span><span class="p">)</span>
+
+<span class="w">                </span><span class="err">]</span><span class="p">)</span><span class="err">]</span>
+
+<span class="w">                </span><span class="n">profileline</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">profile</span><span class="p">)</span>
+
+<span class="w">            </span><span class="n">self</span><span class="p">.</span><span class="n">feprofile</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">np</span><span class="p">.</span><span class="n">vstack</span><span class="p">(</span><span class="o">[</span><span class="n">self.feprofile, profileline</span><span class="o">]</span><span class="p">)</span>
+
+<span class="w">            </span><span class="n">lasttime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">time</span>
+</code></pre></div>
+
+</details>
+<h4 id="plot">plot</h4>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">plot</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;FEProfile.png&#39;</span><span class="p">,</span>
+    <span class="n">image_size</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">7</span><span class="p">],</span>
+    <span class="n">xlabel</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">ylabel</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">label_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">12</span><span class="p">,</span>
+    <span class="n">cmap</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;jet&#39;</span>
+<span class="p">)</span>
+</code></pre></div>
+
+<p>Visualization function for Free Energy Profile (FEP).</p>
+<p>Usage:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">fep</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+</code></pre></div>
+
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>name</td>
+<td>str</td>
+<td>Name for the .png file to save the plot to. Defaults to be "FEProfile.png".</td>
+<td>be "FEProfile.png"</td>
+</tr>
+<tr>
+<td>image_size</td>
+<td>List[int]</td>
+<td>List of two dimensions of the picture. Defaults to be [10, 7].</td>
+<td>be [10, 7]</td>
+</tr>
+<tr>
+<td>xlabel</td>
+<td>str</td>
+<td>X-axis label. Defaults to be None.</td>
+<td>be None</td>
+</tr>
+<tr>
+<td>ylabel</td>
+<td>str</td>
+<td>Y-axis label. Defaults to be None.</td>
+<td>be None</td>
+</tr>
+<tr>
+<td>label_size</td>
+<td>int</td>
+<td>Size of labels. Defaults to be 12.</td>
+<td>be 12</td>
+</tr>
+<tr>
+<td>cmap</td>
+<td>str</td>
+<td>Matplotlib colormap used for coloring the line of the minima. Defaults to be "jet".</td>
+<td>be "jet"</td>
+</tr>
+</tbody>
+</table>
+<details class="example">
+<summary>View Source</summary>
+<div class="codehilite"><pre><span></span><code>    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span>
+
+        <span class="bp">self</span><span class="p">,</span>
+
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;FEProfile.png&quot;</span><span class="p">,</span>
+
+        <span class="n">image_size</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">7</span><span class="p">],</span>
+
+        <span class="n">xlabel</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+
+        <span class="n">ylabel</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+
+        <span class="n">label_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">12</span><span class="p">,</span>
+
+        <span class="n">cmap</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;jet&quot;</span><span class="p">,</span>
+
+    <span class="p">):</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        Visualization function for Free Energy Profile (FEP).</span>
+
+<span class="sd">        Usage:</span>
+
+<span class="sd">        ```python</span>
+
+<span class="sd">        fep.plot()</span>
+
+<span class="sd">        ```</span>
+
+<span class="sd">        Args:</span>
+
+<span class="sd">            name (str): Name for the .png file to save the plot to. Defaults to be &quot;FEProfile.png&quot;.</span>
+
+<span class="sd">            image_size (List[int]): List of two dimensions of the picture. Defaults to be [10, 7].</span>
+
+<span class="sd">            xlabel (str, optional): X-axis label. Defaults to be None.</span>
+
+<span class="sd">            ylabel (str, optional): Y-axis label. Defaults to be None.</span>
+
+<span class="sd">            label_size (int): Size of labels. Defaults to be 12.</span>
+
+<span class="sd">            cmap (str): Matplotlib colormap used for coloring the line of the minima. Defaults to be &quot;jet&quot;.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+        <span class="kn">import</span> <span class="nn">matplotlib.cm</span> <span class="k">as</span> <span class="nn">cm</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="n">image_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">image_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+
+        <span class="n">color_map</span> <span class="o">=</span> <span class="n">cm</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="n">cmap</span><span class="p">)</span>
+
+        <span class="c1"># colors = cm.jet((self.minima.iloc[:,1].to_numpy()).astype(float)/\</span>
+
+        <span class="c1">#                (np.max(self.minima.iloc[:,1].to_numpy().astype(float))))</span>
+
+        <span class="n">colors</span> <span class="o">=</span> <span class="n">color_map</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">minima</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">minima</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+
+            <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">feprofile</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span>
+
+                     <span class="bp">self</span><span class="o">.</span><span class="n">feprofile</span><span class="p">[:,</span> <span class="n">m</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">colors</span><span class="p">[</span><span class="n">m</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">xlabel</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;time (ps)&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">label_size</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="n">xlabel</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">label_size</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">ylabel</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+
+            <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;free energy difference (kJ/mol)&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">label_size</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+
+            <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="n">ylabel</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">label_size</span><span class="p">)</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+</code></pre></div>
+
+</details>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+        </div>
+        
+      </main>
+      
+        
+<footer class="md-footer">
+    
+      <nav class="md-footer__inner md-grid" aria-label="Footer">
+        
+          
+          <a href="../minima/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Minima" rel="prev">
+            <div class="md-footer__button md-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <div class="md-ellipsis">
+                <span class="md-footer__direction">
+                  Previous
+                </span>
+                Minima
+              </div>
+            </div>
+          </a>
+        
+        
+      </nav>
+    
+    <div class="md-footer-meta md-typeset">
+      <div class="md-footer-meta__inner md-grid">
+        <div class="md-footer-copyright">
+            
+            Powered by
+            <a href="http://timothycrosley.github.io/portray">portray.</a>
+            You too can
+            <a href="http://timothycrosley.github.io/portray">
+              portray</a>
+            your Python project well using automatic documentation.
+          </div>
+        
+      </div>
+    </div>
+  </footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "../../..", "features": [], "search": "../../../assets/javascripts/workers/search.5bf1dace.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.078830c0.min.js"></script>
+      
+    
+  </body>
+</html>
