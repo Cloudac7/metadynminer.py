@@ -271,42 +271,24 @@ class String2D:
                               self.mep, method="linear")
         return self.mep, energy_mep
 
-    def plot_V(self, clip_min=None, clip_max=None, levels=None, cmap="RdYlBu", dpi=300):
-        """
-        Generates a filled contour plot of the energy landscape $V$.
-
-        Args:
-            cmap: Colormap for plot.
-            levels: Levels to plot contours at (see matplotlib contour/contourf docs for details).
-            dpi: DPI.
-        """
-        fig, ax = plt.subplots(dpi=dpi)
-
-        V = self.V
-        if clip_min is not None:
-            V = V.clip(min=clip_min)
-        if clip_max is not None:
-            V = V.clip(max=clip_max)
-
-        cs = ax.contourf(self.X, self.Y, V, levels=levels, cmap=cmap)
-        ax.contour(self.X, self.Y, V, levels=levels, colors="black", alpha=0.2)
-        cbar = fig.colorbar(cs)
-        return fig, ax, cbar
-
-    def plot_mep(self, **plot_V_kwargs):
+    def plot_mep(self, path_color="white", **kwargs):
         """
         Plots the minimum energy path on the energy landscape $V$.
 
         Args:
             **plot_V_kwargs: Keyword arguments for plotting the energy landscape V.
         """
-        fig, ax, cbar = self.plot_V(**plot_V_kwargs)
-        ax.scatter(self.mep[0, 0], self.mep[0, 1], color="white")
-        ax.scatter(self.mep[-1, 0], self.mep[-1, 1], color="white")
-        ax.plot(self.mep[:, 0], self.mep[:, 1], color="white")
-        return fig, ax, cbar
+        fig, ax = self.fes.plot(**kwargs)
+        
+        if self.mep is None:
+            raise ValueError("No MEP found. Please run `compute_mep` first.")
 
-    def plot_mep_energy_profile(self, dpi=300):
+        ax.scatter(self.mep[0, 0], self.mep[0, 1], color=path_color)
+        ax.scatter(self.mep[-1, 0], self.mep[-1, 1], color=path_color)
+        ax.plot(self.mep[:, 0], self.mep[:, 1], color=path_color)
+        return fig, ax
+
+    def plot_mep_energy_profile(self, energy_unit="kJ/mol", dpi=96):
         """
         Plots the energy profile along the minimum energy path in $V$.
         """
@@ -314,9 +296,11 @@ class String2D:
                               self.mep, method="linear")
         fig, ax = plt.subplots(dpi=dpi)
         ax.plot(np.linspace(0, 1, len(energy_mep)), energy_mep)
+        ax.set_xlabel("Reaction coordinate")
+        ax.set_ylabel(f"Free Energy ({energy_unit})")
         return fig, ax
 
-    def plot_string_evolution(self, string_cmap=cm.gray, **plot_V_kwargs):
+    def plot_string_evolution(self, string_cmap=cm.gray, **kwargs):
         """
         Plots the evolution of the string on the energy landscape $V$.
 
@@ -324,8 +308,12 @@ class String2D:
             string_cmap: Colormap to use for plotting the evolution of the string.
             **plot_V_kwargs: Keyword arguments for plotting the energy landscape V.
         """
-        fig, ax, cbar = self.plot_V(**plot_V_kwargs)
+        fig, ax = self.fes.plot(**kwargs)
+        if self.mep is None:
+            raise ValueError("No MEP found. Please run `compute_mep` first.")
+        
         colors = string_cmap(np.linspace(0, 1, len(self.string_traj)))
         for sidx, string in enumerate(self.string_traj):
             ax.plot(string[:, 0], string[:, 1], "--", color=colors[sidx])
-        return fig, ax, cbar
+
+        return fig, ax

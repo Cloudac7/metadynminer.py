@@ -497,8 +497,10 @@ class PlottingFES:
         cmap: Union[str, Colormap] = "RdYlBu",
         image_size: List[int] = [10, 7],
         dpi: int = 96,
+        energy_unit: str = 'kJ/mol',
         xlabel: Optional[str] = None,
         ylabel: Optional[str] = None,
+        zlabel: Optional[str] = None,
         **kwargs
     ):
         """
@@ -520,7 +522,7 @@ class PlottingFES:
 
         if fes_obj.fes is None:
             raise ValueError(
-                "FES not calculated yet. Use makefes() or makefes2() first.")
+                "FES not calculated yet. Use fes.makefes() or fes.makefes2() first.")
         X = np.linspace(fes_obj.cv_min[0], fes_obj.cv_max[0], fes_obj.res)
         Y = np.linspace(fes_obj.cv_min[1], fes_obj.cv_max[1], fes_obj.res)
         fes = fes_obj.fes.T
@@ -538,4 +540,8 @@ class PlottingFES:
         else:
             ax.set_ylabel(ylabel)
         cbar = fig.colorbar(cs)
+        if zlabel == None:
+            cbar.set_label(f'Free Energy ({energy_unit})')
+        else:
+            cbar.set_label(zlabel)
         return fig, ax
