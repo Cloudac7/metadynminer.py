@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 
 from metadynminer.hills import Hills
-from metadynminer.fes import Fes
+from metadynminer.fes import FES
 from metadynminer.minima import Minima
 
 from .test_fes import read_hills
@@ -14,7 +14,7 @@ def test_minima(shared_datadir):
         periodic=[True, True], 
         cv_per=[[-np.pi, np.pi], [-np.pi, np.pi]],
     )
-    fes = Fes(hills, resolution=256)
+    fes = FES(hills, resolution=256)
     minima = Minima(fes)
     minima_df = minima.minima
     if type(minima_df) == pd.DataFrame:

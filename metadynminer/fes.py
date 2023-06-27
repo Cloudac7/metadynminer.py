@@ -1,12 +1,18 @@
 import sys
 import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 from tqdm import tqdm, trange
-from typing import Optional, List
+from typing import Optional, List, Union, Dict, Any
+from matplotlib.colors import Colormap
 from metadynminer.hills import Hills
 
+from miko.graph.plotting import canvas_style, AxesInit, square_grid
+from miko.utils.log_factory import logger
 
-class Fes:
+
+class FES:
     """
     Computes the free energy surface corresponding to the provided Hills object.
 
@@ -27,16 +33,9 @@ class Fes:
             Defaults to True.
         resolution (int, optional): \
             The resolution of the free energy surface. Defaults to 256.
-        cv_select (List[int], optional): \
-            A list of integers specifying which collective variables (CVs) should be used for FES calculation. \
-            Defaults to None.
-        cv_range (List[float], optional): \
-            A list of two numbers defining the lower and upper bounds of the CVs (in the units of the CV). \
-            Defaults to None. \
         time_min (int): The starting time step of simulation. Defaults to 0.
         time_max (int, optional): The ending time step of simulation. Defaults to None.
     """
-
 
     def __init__(
         self,
@@ -44,102 +43,55 @@ class Fes:
         original: bool = False,
         calculate_new_fes: bool = True,
         resolution: int = 256,
-        cv_select: Optional[List[int]] = None,
-        cv_range: Optional[List[float]] = None,
         time_min: int = 0,
         time_max: Optional[int] = None
     ):
         self.res = resolution
         self.fes = None
+        self.cvs = hills.cvs
 
         self.hills = hills
         self.periodic = hills.get_periodic()
-
-        if cv_select != None:
-            self.cvs = len(cv_select)
-        else:
-            cv_select = [i for i in range(self.hills.cvs)]
-            self.cvs = len(cv_select)
+        self.cv_name = hills.cv_name
 
         if time_max != None:
             if time_max <= time_min:
-                print("Error: End time is lower than start time")
+                logger.warning("Warning: End time is lower than start time")
             if time_max > len(self.hills.cv[:, 0]):
                 time_max = len(self.hills.cv[:, 0])
-                print(
-                    f"Error: End time {time_max} is higher than",
+                logger.warning(
+                    f"Warning: End time {time_max} is higher than",
                     f"number of lines in HILLS file {len(self.hills.cv[:, 0])},",
                     "which will be used instead."
                 )
 
         if calculate_new_fes:
             if not original:
-                self.makefes(resolution, cv_select,
-                             cv_range, time_min, time_max)
+                self.makefes(resolution, time_min, time_max)
             else:
-                self.makefes2(resolution, cv_select,
-                              cv_range, time_min, time_max)
+                self.makefes2(resolution, time_min, time_max)
 
-    def generate_cv_map(
-        self,
-        cv_select: Optional[List[int]] = None,
-        cv_range: Optional[List[float]] = None
-    ):
-        """generate CV map
+    def generate_cv_map(self):
+        """generate CV map"""
 
-        Args:
-            cv_select (List[int], optional): \
-                A list of integers specifying which collective variables (CVs) should be used for FES calculation. \
-                Defaults to None.
-            cv_range (Optional[List[float]], optional): \
-                A list of two numbers defining the lower and upper bounds of the CVs (in the units of the CV). \
-                Defaults to None. \
-
-        Returns:
-            Tuple: cv_min, cv_max, cv_fes_range
-        """
-        if cv_select is None:
-            cv_select = list(range(self.cvs))
-        
-        self.cv_select = cv_select
-        self.cvs = len(cv_select)
-
-        if cv_range is None:
-            cv_min = self.hills.cv_min[cv_select]
-            cv_max = self.hills.cv_max[cv_select]
-            cv_range = self.hills.cv_max - self.hills.cv_min
-        else:
-            if len(cv_range) != len(cv_select) and len(cv_range) != 2:
-                raise ValueError(
-                    "cv_range has to have the same length as cv_select"
-                    "or be a list of two numbers"
-                )
-            elif len(cv_range) == 2:
-                if type(cv_range[0]) == int:
-                    cv_min = np.full(len(cv_select), cv_range[0])
-                    cv_max = np.full(len(cv_select), cv_range[1])
-            else:
-                cv_min = np.array(cv_range)[:, 0]
-                cv_max = np.array(cv_range)[:, 1]
+        cv_min = self.hills.cv_min
+        cv_max = self.hills.cv_max
+        cv_range = cv_max - cv_min
 
         self.cv_range = cv_range
 
-        cv_min[~self.periodic[cv_select] # type: ignore
-               ] -= cv_range[~self.periodic[cv_select]] * 0.15 # type: ignore
-        cv_max[~self.periodic[cv_select] # type: ignore
-               ] += cv_range[~self.periodic[cv_select]] * 0.15 # type: ignore
-        cv_fes_range = np.abs(cv_max - cv_min) # type: ignore
+        cv_min[~self.periodic] -= cv_range[~self.periodic] * 0.15
+        cv_max[~self.periodic] += cv_range[~self.periodic] * 0.15
+        cv_fes_range = np.abs(cv_max - cv_min)
 
         # generate remapped cv_min and cv_max
-        self.cv_min = cv_min # type: ignore
-        self.cv_max = cv_max # type: ignore
+        self.cv_min = cv_min
+        self.cv_max = cv_max
         self.cv_fes_range = cv_fes_range
 
     def makefes(
         self,
         resolution: Optional[int] = None,
-        cv_select: Optional[List[int]] = None,
-        cv_range: Optional[List[float]] = None,
         time_min: Optional[int] = None,
         time_max: Optional[int] = None
     ):
@@ -148,19 +100,13 @@ class Fes:
         Args:
             resolution (int, optional): \
                 The resolution of the free energy surface. Defaults to 256.
-            cv_select (List[int], optional): \
-                A list of integers specifying which collective variables (CVs) should be used for FES calculation. \
-                Defaults to None.
-            cv_range (List[float], optional): \
-                A list of two numbers defining the lower and upper bounds of the CVs (in the units of the CV). \
-                Defaults to None. \
             time_min (int): The starting time step of simulation. Defaults to 0.
             time_max (int, optional): The ending time step of simulation. Defaults to None.
         """
 
         if resolution is None:
             resolution = self.res
-        self.generate_cv_map(cv_select, cv_range)
+        self.generate_cv_map()
 
         cv_min = self.cv_min
         cv_max = self.cv_max
@@ -169,12 +115,12 @@ class Fes:
         cv_bins = np.array([np.ceil(
             (self.hills.cv[time_min:time_max, cv_index] -
              cv_min[cv_index]) * resolution / cv_fes_range[cv_index]
-        ) for cv_index in cv_select])
-        cvs = len(cv_select)
+        ) for cv_index in range(self.cvs)])
+        cvs = self.cvs
         cv_bins = cv_bins.astype(int)
 
         sigma = np.array([self.hills.sigma[cv_index][0]
-                         for cv_index in cv_select])
+                         for cv_index in range(self.cvs)])
         sigma_res = (sigma * self.res) / (cv_max - cv_min)
 
         gauss_res = np.max((8 * sigma_res).astype(int))
@@ -222,8 +168,6 @@ class Fes:
     def makefes2(
         self,
         resolution: Optional[int],
-        cv_select: Optional[List[int]] = None,
-        cv_range: Optional[List[float]] = None,
         time_min: Optional[int] = None,
         time_max: Optional[int] = None
     ):
@@ -233,12 +177,6 @@ class Fes:
         Args:
             resolution (int, optional): \
                 The resolution of the free energy surface. Defaults to 256.
-            cv_select (List[int], optional): \
-                A list of integers specifying which collective variables (CVs) should be used for FES calculation. \
-                Defaults to None.
-            cv_range (List[float], optional): \
-                A list of two numbers defining the lower and upper bounds of the CVs (in the units of the CV). \
-                Defaults to None. \
             time_min (int): The starting time step of simulation. Defaults to 0.
             time_max (int, optional): The ending time step of simulation. Defaults to None.
         """
@@ -246,12 +184,12 @@ class Fes:
         if resolution is None:
             resolution = self.res
 
-        self.generate_cv_map(cv_select, cv_range)
+        self.generate_cv_map()
         cv_min = self.cv_min
         cv_max = self.cv_max
         cv_fes_range = self.cv_fes_range
 
-        cvs = len(self.cv_select)
+        cvs = self.cvs
         fes = np.zeros([resolution] * cvs)
         if time_min and time_max:
             time_limit = time_max - time_min
@@ -264,7 +202,7 @@ class Fes:
                           desc="Constructing FES",
                           total=np.prod(fes.shape)):  # type: ignore
             dp2_array = np.zeros([cvs, time_limit])
-            for i, cv_idx in enumerate(self.cv_select):
+            for i, cv_idx in enumerate(range(cvs)):
                 dist_cv = \
                     self.hills.cv[:, cv_idx] - \
                     (cv_min[i] + index[i] * cv_fes_range[i] / resolution)
@@ -285,254 +223,7 @@ class Fes:
         fes = fes - np.min(fes)
         self.fes = np.array(fes)
 
-    def plot(
-        self,
-        png_name: Optional[str] = None,
-        contours: bool = True,
-        contours_spacing: float = 0.0,
-        aspect: float = 1.0,
-        cmap: str = "jet",
-        energy_unit: str = "kJ/mol",
-        xlabel: Optional[str] = None,
-        ylabel: Optional[str] = None,
-        zlabel: Optional[str] = None,
-        label_size: int = 12,
-        image_size: List[int] = [10, 7],
-        vmin: float = 0,
-        vmax: Optional[float] = None,
-        opacity: float = 0.2,
-        levels: Optional[List[float]] = None,
-    ):
-        """
-        Visualizes the free energy surface (FES) using Matplotlib and PyVista.
-
-        Usage:
-        ```python
-        fes.plot()
-        ```
-
-        Args:
-            png_name (str, optional): If provided, the picture of FES will be saved under this name in the current working directory.
-            contours (bool, default=True): Determines whether contours should be shown on the 2D FES.
-            contours_spacing (float, default=0.0): When a positive number is set, it will be used as the spacing for contours on the 2D FES. Otherwise, if contours=True, there will be five equally spaced contour levels.
-            aspect (float, default=1.0): The aspect ratio of the graph. Works with 1D and 2D FES.
-            cmap (str, default="jet"): The Matplotlib colormap used to color the 2D or 3D FES.
-            energy_unit (str, default="kJ/mol"): The unit used in the description of the colorbar.
-            xlabel, ylabel, zlabel (str, optional): If provided, they will be used as labels for the graphs.
-            label_size (int, default=12): The size of text in the labels.
-            image_size (List[int], default=[10,7]): The width and height of the picture.
-            vmin (float, default=0): The lower bound for the colormap on the 2D FES.
-            vmax (float, optional): The upper bound for the colormap on the 2D FES.
-            opacity (float, default=0.2): A number between 0 and 1 that represents the opacity of isosurfaces in the 3D FES.
-            levels (List[float], optional): A list of free energy values for isosurfaces in the 3D FES. If not provided, default values from the contours parameters will be used instead.
-        """
-
-        import matplotlib.cm as cm
-        import matplotlib.pyplot as plt
-
-        if self.fes is None:
-            raise ValueError(
-                "FES not calculated yet. Use makefes() or makefes2() first.")
-
-        if vmax == None:
-            # if the addition is smaller than 0.01, the 3d plot stops working.
-            vmax = np.max(self.fes) + 0.01
-
-        if contours_spacing == 0.0:
-            contours_spacing = (vmax-vmin)/5.0
-
-        cmap = cm.get_cmap(cmap)
-
-        cmap.set_over("white")
-        cmap.set_under("white")
-
-        cvs = len(self.cv_select)
-
-        if cvs == 1:
-            cv_index = self.cv_select[0]
-            plt.figure(figsize=(image_size[cv_index], image_size[1]))
-            X = np.linspace(self.cv_min[cv_index],
-                            self.cv_max[cv_index], self.res)
-            plt.plot(X, self.fes)
-            if xlabel == None:
-                plt.xlabel(
-                    f'CV1 - {self.hills.cv_name[cv_index]}', size=label_size)
-            else:
-                plt.xlabel(xlabel, size=label_size)
-            if ylabel == None:
-                plt.ylabel(f'free energy ({energy_unit})', size=label_size)
-            else:
-                plt.ylabel(ylabel, size=label_size)
-
-        elif cvs == 2:
-            cv1_index = self.cv_select[0]
-            cv2_index = self.cv_select[1]
-            cv1min = self.cv_min[self.cv_select[0]]
-            cv1max = self.cv_max[self.cv_select[0]]
-            cv2min = self.cv_min[self.cv_select[1]]
-            cv2max = self.cv_max[self.cv_select[1]]
-
-            fig = plt.figure(figsize=(image_size[0], image_size[1]))
-            plt.imshow(np.rot90(self.fes, axes=(0, 1)), cmap=cmap, interpolation='nearest',
-                       extent=[cv1min, cv1max, cv2min, cv2max],
-                       aspect=(((cv1max-cv1min)/(cv2max-cv2min))/(aspect)),
-                       vmin=vmin, vmax=vmax)  # type: ignore
-            cbar = plt.colorbar()
-            cbar.set_label(energy_unit, size=label_size)
-            if contours:
-                cont = plt.contour(np.rot90(self.fes, axes=(0, 1)),
-                                   levels=np.arange(
-                                       0, (vmax - 0.01), contours_spacing),
-                                   extent=[cv1min, cv1max, cv2max, cv2min],
-                                   colors="k")
-                plt.clabel(cont, levels=np.arange(
-                    0, (vmax - 0.01), contours_spacing))
-            if xlabel == None:
-                plt.xlabel(
-                    f'CV1 - {self.hills.cv_name[cv1_index]}', size=label_size)
-            else:
-                plt.xlabel(xlabel, size=label_size)
-            if ylabel == None:
-                plt.ylabel(
-                    f'CV2 - {self.hills.cv_name[cv2_index]}', size=label_size)
-            else:
-                plt.ylabel(ylabel, size=label_size)
-
-        elif cvs == 3:
-            try:
-                import pyvista as pv
-            except (ImportError, ModuleNotFoundError) as e:
-                print(e)
-                sys.exit(1)
-
-            cv1_index = self.cv_select[0]
-            cv2_index = self.cv_select[1]
-            cv3_index = self.cv_select[2]
-            cv1min = self.cv_min[self.cv_select[0]]
-            cv1max = self.cv_max[self.cv_select[0]]
-            cv2min = self.cv_min[self.cv_select[1]]
-            cv2max = self.cv_max[self.cv_select[1]]
-            cv3min = self.cv_min[self.cv_select[2]]
-            cv3max = self.cv_max[self.cv_select[2]]
-            if xlabel == None:
-                xlabel = "CV1 - " + self.hills.cv_name[cv1_index]
-            if ylabel == None:
-                ylabel = "CV2 - " + self.hills.cv_name[cv2_index]
-            if zlabel == None:
-                zlabel = "CV3 - " + self.hills.cv_name[cv3_index]
-
-            grid = pv.UniformGrid(
-                dimensions=(self.res, self.res, self.res),
-                spacing=((cv1max-cv1min)/self.res, (cv2max-cv2min) /
-                         self.res, (cv3max-cv3min)/self.res),
-                origin=(cv1min, cv2min, cv3min)
-            )
-            grid["vol"] = self.fes.ravel(order="F")
-            if levels == None:
-                contours = grid.contour(
-                    np.arange(0, (vmax - 0.01), contours_spacing))
-            else:
-                contours = grid.contour(levels)
-            fescolors = []
-            for i in range(contours.points.shape[0]):
-                fescolors.append(self.fes[int((contours.points[i, 0]-cv1min)*self.res/(cv1max-cv1min)),
-                                          int((
-                                              contours.points[i, 1]-cv2min)*self.res/(cv2max-cv2min)),
-                                          int((contours.points[i, 2]-cv3min)*self.res/(cv3max-cv3min))])
-            # %% Visualization
-            pv.set_plot_theme('document')
-            p = pv.Plotter()
-            p.add_mesh(contours, scalars=fescolors, opacity=opacity,
-                       cmap=cmap, show_scalar_bar=False, interpolate_before_map=True)
-            p.show_grid(xlabel=xlabel, ylabel=ylabel, zlabel=zlabel)
-            p.show()
-
-        else:
-            raise ValueError("Only 1D, 2D and 3D FES are supported.")
-
-        if png_name != None:
-            plt.savefig(png_name)
-
-    def set_fes(self, fes):
-        self.fes = fes
-
-    def surface_plot(
-        self,
-        cv_select: Optional[None] = None,
-        cv_range: Optional[None] = None,
-        cmap: str = "jet",
-        energy_unit: str = "kJ/mol",
-        xlabel: Optional[str] = None,
-        ylabel: Optional[str] = None,
-        zlabel: Optional[str] = None,
-        label_size: int = 12,
-        image_size: List[int] = [12, 7],
-        rstride: int = 1,
-        cstride: int = 1,
-        vmin: int = 0,
-        vmax: Optional[int] = None,
-    ):
-        """
-        Visualizes the 2D free energy surface (FES) as a 3D surface plot using Matplotlib.
-
-        Note: Interactivity is currently limited to jupyter notebook or jupyter lab in `%matplotlib widget` mode. Otherwise, it is a static image of the 3D surface plot.
-
-        Usage:
-        ```python
-        %matplotlib widget
-        fes.surface_plot()
-        ```
-
-        Future plans include implementing this function using PyVista. However, in the current version of PyVista (0.38.5), there is an issue with labels on the 3rd axis for free energy showing wrong values.
-        """
-
-        import matplotlib.pyplot as plt
-
-        if cv_select is None:
-            cv_select = list(range(self.cvs))
-
-        if self.cvs == 2:
-            cv1_index = self.cv_select[0]
-            cv2_index = self.cv_select[1]
-            cv1min = self.cv_min[self.cv_select[0]]
-            cv1max = self.cv_max[self.cv_select[0]]
-            cv2min = self.cv_min[self.cv_select[1]]
-            cv2max = self.cv_max[self.cv_select[1]]
-
-            x = np.linspace(cv1min, cv1max, self.res)
-            y = np.linspace(cv2min, cv2max, self.res)
-
-            X, Y = np.meshgrid(x, y)
-            Z = self.fes
-
-            #grid = pv.StructuredGrid(X, Y, Z)
-            # grid.plot()
-
-            fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
-            ax.plot_surface(X, Y, Z, cmap=cmap,  # type: ignore
-                            rstride=rstride, cstride=cstride)
-
-            if xlabel == None:
-                ax.set_xlabel(
-                    f'CV1 - {self.hills.cv_name[cv1_index]}', size=label_size)
-            else:
-                ax.set_xlabel(xlabel, size=label_size)
-            if ylabel == None:
-                ax.set_ylabel(
-                    f'CV2 - {self.hills.cv_name[cv2_index]}', size=label_size)
-            else:
-                ax.set_ylabel(ylabel, size=label_size)
-            if zlabel == None:
-                # type: ignore
-                ax.set_zlabel(f'free energy ({energy_unit})', size=label_size)
-            else:
-                ax.set_zlabel(zlabel, size=label_size)  # type: ignore
-        else:
-            raise ValueError(
-                f"Surface plot only works for FES with exactly two CVs, and this FES has {self.hills.cvs}"
-            )
-
-    def removeCV(
+    def remove_cv(
         self,
         CV: int,
         kb: Optional[float] = None,
@@ -555,18 +246,18 @@ class Fes:
             temp (float) = temperature of the simulation in Kelvins.
 
         Return:
-            New `Fes` instance without the CV to be removed.
+            New `FES` instance without the CV to be removed.
         """
-        
-        print(f"Removing CV {CV}.")
+
+        logger.info(f"Removing CV {CV}.")
 
         if self.fes is None:
             raise ValueError(
                 "FES not calculated yet. Use makefes() or makefes2() first.")
 
         if CV > self.hills.cvs:
-            print("Error: The CV to remove is not available in this FES object.")
-            return None
+            raise ValueError("Error: The CV to remove is not available in this FES object.")
+
         if kb == None:
             if energy_unit == "kJ/mol":
                 kb = 8.314e-3
@@ -577,133 +268,274 @@ class Fes:
                     "Please give the Boltzmann Constant in the energy unit.")
 
         if self.cvs == 1:
-            print("Error: You can not remove the only CV. ")
-            return None
+            raise ValueError("Error: You can not remove the only CV. ")
         else:
             probabilities = np.exp(-self.fes / (kb * temp))
             new_prob = np.sum(probabilities, axis=CV)
 
-            new_fes = Fes(hills=self.hills, calculate_new_fes=False)
+            new_fes = FES(hills=self.hills, calculate_new_fes=False)
             new_fes.fes = - kb * temp * np.log(new_prob)
             new_fes.fes = new_fes.fes - np.min(new_fes.fes)
             new_fes.res = self.res
 
-            mask = np.ones(len(self.cv_select), dtype=bool)
+            mask = np.ones(self.cvs, dtype=bool)
             mask[CV] = False
-            new_fes.cv_select = self.cv_select[mask]
             new_fes.cv_min = self.cv_min[mask]
             new_fes.cv_max = self.cv_max[mask]
             new_fes.cv_fes_range = self.cv_fes_range[mask]
+            new_fes.cv_name = [
+                j for i, j in enumerate(self.cv_name) if mask[i]]
+            new_fes.cvs = self.cvs - 1
             return new_fes
 
-    def make_gif(
+    def remove_cvs(
         self,
-        gif_name: str = "FES.gif",
-        cmap: str = "jet",
+        CVs: List[int],
+        kb: Optional[float] = None,
+        energy_unit: str = "kJ/mol",
+        temp: float = 300.0
+    ):
+        fes = self.remove_cv(CVs[0], kb, energy_unit, temp)
+        if len(CVs) > 1:
+            for CV in CVs[1:]:
+                if fes is not None:
+                    fes = fes.remove_cv(CV, kb, energy_unit, temp)
+        return fes
+
+    def set_fes(self, fes: np.ndarray):
+        self.fes = fes
+
+    def plot(
+        self,
+        png_name: Optional[str] = None,
+        cmap: Union[str, Colormap] = "RdYlBu_r",
+        energy_unit: str = "kJ/mol",
         xlabel: Optional[str] = None,
         ylabel: Optional[str] = None,
-        zlabel: Optional[str] = None,
-        label_size: int = 12,
         image_size: List[int] = [10, 7],
-        opacity: float = 0.2,
-        levels: Optional[List[float]] = None,
-        frames: int = 64,
+        levels: Optional[int] = 20,
+        dpi: int = 96,
+        surface: bool = False,
+        surface_params: Optional[Dict[str, Any]] = None,
+        **kwargs
     ):
         """
-        Generates an animation of the 3D free energy surface (FES) showing different isosurfaces.
+        Visualizes the free energy surface (FES) using Matplotlib and PyVista.
 
         Usage:
         ```python
-        fes.make_gif()
+        fes.plot()
         ```
 
         Args:
-            gif_name (str, default="FES.gif"): \
-                The name of the gif file of the FES that will be saved in the current working directory.
-            cmap (str, default="jet"): \
-                The Matplotlib colormap used to color the 3D FES.
-            xlabel, ylabel, zlabel (str, optional): \
-                If provided, they will be used as labels for the graph.
-            label_size (int, default=12): \
-                The size of text in the labels.
-            image_size (List[int], default=[10,7]): \
-                The width and height of the picture.
-            opacity (float, default=0.2): \
-                A number between 0 and 1 representing the opacity of isosurfaces in the 3D FES.
-            levels (List[float], optional): \
-                A list of free energy values for isosurfaces in the 3D FES. If not provided, default values from the contours parameters will be used instead.
-            frames (int, default=64): \
-                The number of frames the animation will be composed of.
+            png_name (str, optional): If provided, the picture of FES will be saved under this name in the current working directory.
+            contours (bool, default=True): Determines whether contours should be shown on the 2D FES.
+            contours_spacing (float, default=0.0): When a positive number is set, it will be used as the spacing for contours on the 2D FES. Otherwise, if contours=True, there will be five equally spaced contour levels.
+            aspect (float, default=1.0): The aspect ratio of the graph. Works with 1D and 2D FES.
+            cmap (str, default="RdYlBu"): The Matplotlib colormap used to color the 2D or 3D FES.
+            energy_unit (str, default="kJ/mol"): The unit used in the description of the colorbar.
+            xlabel, ylabel, zlabel (str, optional): If provided, they will be used as labels for the graphs.
+            label_size (int, default=12): The size of text in the labels.
+            image_size (List[int], default=[10,7]): The width and height of the picture.
+            vmin (float, default=0): The lower bound for the colormap on the 2D FES.
+            vmax (float, optional): The upper bound for the colormap on the 2D FES.
+            opacity (float, default=0.2): A number between 0 and 1 that represents the opacity of isosurfaces in the 3D FES.
+            levels (int, optional): A list of free energy values for isosurfaces in FES. Defaults to be 20.
         """
-        try:
-            import pyvista as pv
-        except (ImportError, ModuleNotFoundError) as e:
-            print(e)
-            sys.exit(1)
+
+        import matplotlib.cm as cm
+        import matplotlib.pyplot as plt
 
         if self.fes is None:
             raise ValueError(
                 "FES not calculated yet. Use makefes() or makefes2() first.")
 
-        if self.cvs == 3:
-            cv1_index = self.cv_select[0]
-            cv2_index = self.cv_select[1]
-            cv3_index = self.cv_select[2]
-            cv1min = self.cv_min[self.cv_select[0]]
-            cv1max = self.cv_max[self.cv_select[0]]
-            cv2min = self.cv_min[self.cv_select[1]]
-            cv2max = self.cv_max[self.cv_select[1]]
-            cv3min = self.cv_min[self.cv_select[2]]
-            cv3max = self.cv_max[self.cv_select[2]]
+        if type(cmap) is str:
+            cmap = cm.get_cmap(cmap)
 
-            values = np.linspace(np.min(self.fes)+0.01,
-                                 np.max(self.fes), num=frames)
-            grid = pv.UniformGrid(
-                dimensions=(self.res, self.res, self.res),
-                spacing=((cv1max-cv1min)/self.res, (cv2max-cv2min) /
-                         self.res, (cv3max-cv3min)/self.res),
-                origin=(cv1min, cv2min, cv3min),
+        cvs = self.cvs
+
+        if cvs == 1:
+            fig, ax = PlottingFES._plot1d(
+                self, image_size=image_size, dpi=dpi,
+                energy_unit=energy_unit, xlabel=xlabel, **kwargs
             )
-            grid["vol"] = np.ravel(self.fes, order="F")
-            surface = grid.contour(values[:1])
-            surfaces = [grid.contour([v]) for v in values]
-            surface = surfaces[0].copy()
 
-            pv.set_plot_theme('document')
-            plotter = pv.Plotter(off_screen=True)
-            # Open a movie file
-            plotter.open_gif(gif_name)
-
-            # Add initial mesh
-            plotter.add_mesh(
-                surface,
-                opacity=0.3,
-                clim=grid.get_data_range(),
-                show_scalar_bar=False,
-                cmap="jet"
+        elif cvs == 2:
+            if surface:
+                fig, ax = PlottingFES._surface_plot(
+                    self, 
+                    cmap=cmap, image_size=image_size, dpi=dpi,
+                    xlabel=xlabel, ylabel=ylabel,
+                    energy_unit=energy_unit,
+                    **surface_params, **kwargs
+                )
+            fig, ax = PlottingFES._plot2d(
+                self, 
+                levels=levels, cmap=cmap, image_size=image_size, dpi=dpi,
+                xlabel=xlabel, ylabel=ylabel, **kwargs
             )
-            plotter.add_mesh(grid.outline_corners(), color="k")
-            if xlabel == None and ylabel == None and zlabel == None:
-                plotter.show_grid(
-                    xlabel=f"CV1 - {self.hills.cv_name[cv1_index]}",
-                    ylabel=f"CV2 - {self.hills.cv_name[cv2_index]}",
-                    zlabel=f"CV3 - {self.hills.cv_name[cv3_index]}")
+
+        else:
+            raise ValueError("Only 1D and 2D FES are supported.")
+
+        if png_name != None:
+            fig.savefig(png_name)
+
+        return fig, ax
+
+
+class PlottingFES:
+    """Plot FES from a FES object.
+    """
+
+    @staticmethod
+    def _surface_plot(
+        fes: FES,
+        cmap: Union[str, Colormap] = "RdYlBu",
+        energy_unit: str = "kJ/mol",
+        xlabel: Optional[str] = None,
+        ylabel: Optional[str] = None,
+        zlabel: Optional[str] = None,
+        label_size: int = 12,
+        image_size: List[int] = [10, 7],
+        rstride: int = 1,
+        cstride: int = 1,
+        dpi: int = 96,
+        **kwargs
+    ):
+        """
+        Visualizes the 2D free energy surface (FES) as a 3D surface plot using Matplotlib.
+
+        Note: Interactivity is currently limited to jupyter notebook or jupyter lab in `%matplotlib widget` mode. Otherwise, it is a static image of the 3D surface plot.
+
+        Usage:
+        ```python
+        %matplotlib widget
+        fes.surface_plot()
+        ```
+
+        Future plans include implementing this function using PyVista. However, in the current version of PyVista (0.38.5), there is an issue with labels on the 3rd axis for free energy showing wrong values.
+        """
+
+        cv_select = list(range(fes.cvs))
+
+        if fes.cvs == 2:
+            cv1min = fes.cv_min[fes.cv_select[0]]
+            cv1max = fes.cv_max[fes.cv_select[0]]
+            cv2min = fes.cv_min[fes.cv_select[1]]
+            cv2max = fes.cv_max[fes.cv_select[1]]
+
+            x = np.linspace(cv1min, cv1max, fes.res)
+            y = np.linspace(cv2min, cv2max, fes.res)
+
+            X, Y = np.meshgrid(x, y)
+            Z = fes.fes
+
+            canvas_style(**kwargs)
+
+            fig, ax = plt.subplots(
+                figsize=image_size, dpi=dpi,
+                subplot_kw={"projection": "3d"}
+            )
+            ax.plot_surface(X, Y, Z, cmap=cmap,  # type: ignore
+                            rstride=rstride, cstride=cstride)
+
+            if xlabel == None:
+                ax.set_xlabel(
+                    f'CV1 - {fes.cv_name[0]}', size=label_size)
             else:
-                plotter.show_grid(xlabel=xlabel, ylabel=ylabel, zlabel=zlabel)
-            plotter.set_background('white')
-            plotter.show(auto_close=False)
-
-            # Run through each frame
-            for surf in surfaces:
-                surface.copy_from(surf)
-                plotter.write_frame()  # Write this frame
-            # Run through backwards
-            for surf in surfaces[::-1]:
-                surface.copy_from(surf)
-                plotter.write_frame()  # Write this frame
-
-            # Be sure to close the plotter when finished
-            plotter.close()
+                ax.set_xlabel(xlabel, size=label_size)
+            if ylabel == None:
+                ax.set_ylabel(
+                    f'CV2 - {fes.cv_name[1]}', size=label_size)
+            else:
+                ax.set_ylabel(ylabel, size=label_size)
+            if zlabel == None:
+                # type: ignore
+                ax.set_zlabel(f'Free energy ({energy_unit})', size=label_size)
+            else:
+                ax.set_zlabel(zlabel, size=label_size)  # type: ignore
         else:
             raise ValueError(
-                "Error: gif_plot is only available for FES with 3 CVs.")
+                f"Surface plot only works for FES with exactly two CVs, and this FES has {fes.hills.cvs}"
+            )
+        return fig, ax
+
+    @staticmethod
+    def _plot1d(
+        fes: FES,
+        image_size: List[int] = [10, 7],
+        dpi: int = 96,
+        energy_unit: str = 'kJ/mol',
+        xlabel: Optional[str] = None,
+        ylabel: Optional[str] = None,
+        **kwargs
+    ):
+        canvas_style(**kwargs)
+        fig, ax = plt.subplots(
+            figsize=(image_size[0], image_size[1]),
+            dpi=dpi
+        )
+        X = np.linspace(fes.cv_min[0], fes.cv_max[0], fes.res)
+        ax.plot(X, fes.fes)
+        if xlabel == None:
+            ax.set_xlabel(
+                f'CV1 - {fes.cv_name[0]}')
+        else:
+            ax.set_xlabel(xlabel)
+        if ylabel == None:
+            ax.set_ylabel(f'Free Energy ({energy_unit})')
+        else:
+            ax.set_ylabel(ylabel)
+        return fig, ax
+
+    @staticmethod
+    def _plot2d(
+        fes_obj: FES,
+        levels: int = 20,
+        cmap: Union[str, Colormap] = "RdYlBu",
+        image_size: List[int] = [10, 7],
+        dpi: int = 96,
+        xlabel: Optional[str] = None,
+        ylabel: Optional[str] = None,
+        **kwargs
+    ):
+        """
+        Generates a filled contour plot of the energy landscape $V$.
+
+        Args:
+            cmap: Colormap for plot.
+            levels: Levels to plot contours at (see matplotlib contour/contourf docs for details).
+            dpi: DPI.
+        """
+        import seaborn as sns
+        import matplotlib.pyplot as plt
+
+        canvas_style(**kwargs)
+        fig, ax = plt.subplots(
+            figsize=(image_size[0], image_size[1]),
+            dpi=dpi
+        )
+
+        if fes_obj.fes is None:
+            raise ValueError(
+                "FES not calculated yet. Use makefes() or makefes2() first.")
+        X = np.linspace(fes_obj.cv_min[0], fes_obj.cv_max[0], fes_obj.res)
+        Y = np.linspace(fes_obj.cv_min[1], fes_obj.cv_max[1], fes_obj.res)
+        fes = fes_obj.fes.T
+        cs = ax.contourf(X, Y, fes, levels=levels, cmap=cmap)
+        ax.contour(X, Y, fes, levels=levels, colors="black", alpha=0.2)
+
+        if xlabel == None:
+            ax.set_xlabel(
+                f'CV1 - {fes_obj.cv_name[0]}')
+        else:
+            ax.set_xlabel(xlabel)
+        if ylabel == None:
+            ax.set_ylabel(
+                f'CV2 - {fes_obj.cv_name[1]}')
+        else:
+            ax.set_ylabel(ylabel)
+        cbar = fig.colorbar(cs)
+        return fig, ax

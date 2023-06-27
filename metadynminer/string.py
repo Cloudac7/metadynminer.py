@@ -16,7 +16,7 @@ from tqdm import tqdm, trange
 from typing import Literal, List, Union, Tuple, Optional
 
 from miko.utils import logger
-from metadynminer.fes import Fes
+from metadynminer.fes import FES
 from metadynminer.minima import Minima
 
 
@@ -45,7 +45,7 @@ class String2D:
         mep: Converged minimum energy path (default=None, if not converged).
     """
 
-    def __init__(self, fes: Fes, indexing: Literal['xy', 'ij'] = 'xy'):
+    def __init__(self, fes: FES, indexing: Literal['xy', 'ij'] = 'xy'):
         self.fes = fes
         try:
             self.x = np.linspace(fes.cv_min[0], fes.cv_max[0], fes.res)
@@ -84,7 +84,7 @@ class String2D:
         begin: Union[np.ndarray, List[int], Tuple[int, int]],
         end: Union[np.ndarray, List[int], Tuple[int, int]],
         mid: List[Union[np.ndarray, List[int], Tuple[int, int]]] = [],
-        function: str = 'multiquadric',
+        function: str = 'linear',
         npts: int = 100,
         integrator: str = "forward_euler",
         dt: float = 0.1,
@@ -106,7 +106,7 @@ class String2D:
             end: Array of shape (2,) specifying end point of the string.
             mid: List of arrays of shape (2,) specifying points between `begin` and `end`
                 to use for generating an initial guess of the minimum energy path (default=[]).
-            function: The radial basis function used for interpolation. (default='multiquadric').
+            function: The radial basis function used for interpolation. (default='linear').
             npts: Number of points between any two valuesalong the string (default=100).
             integrator: Integration scheme to use (default='forward_euler'). Options=['forward_euler'].
             dt: Integration timestep (default=0.1).
@@ -186,7 +186,7 @@ class String2D:
         if minima is None:
             minima = Minima(self.fes, nbins)
         self.minima = minima.minima
-        print(self.minima)
+        logger.info(self.minima)
 
     def mep_from_minima(
         self,
@@ -217,14 +217,14 @@ class String2D:
                 raise ValueError(
                     "No minima found. Please run `load_minima` or pass a `Minima` object."
                 )
-        minima_x = self.minima.filter(regex=r"^CV1\s+-\s+")
-        minima_y = self.minima.filter(regex=r"^CV2\s+-\s+")
-        begin_x = minima_x.minima.iloc[begin_index]
-        begin_y = minima_y.minima.iloc[begin_index]
-        end_x = minima_x.minima.iloc[end_index]
-        end_y = minima_y.minima.iloc[end_index]
+        minima_x = self.minima.filter(regex=r"^CV1\s+-\s+") # type: ignore
+        minima_y = self.minima.filter(regex=r"^CV2\s+-\s+") # type: ignore
+        begin_x = minima_x.iloc[begin_index].values[0]
+        begin_y = minima_y.iloc[begin_index].values[0]
+        end_x = minima_x.iloc[end_index].values[0]
+        end_y = minima_y.iloc[end_index].values[0]
         if len(mid_indices) > 0:
-            mid = [[minima_x.minima.iloc[i], minima_y.minima.iloc[i]]
+            mid = [[minima_x.iloc[i].values[0], minima_y.iloc[i].values[0]]
                    for i in mid_indices]
         else:
             mid = []
@@ -301,9 +301,9 @@ class String2D:
             **plot_V_kwargs: Keyword arguments for plotting the energy landscape V.
         """
         fig, ax, cbar = self.plot_V(**plot_V_kwargs)
-        ax.scatter(self.mep[0, 0], self.mep[0, 1], color="C0")
-        ax.scatter(self.mep[-1, 0], self.mep[-1, 1], color="C0")
-        ax.plot(self.mep[:, 0], self.mep[:, 1])
+        ax.scatter(self.mep[0, 0], self.mep[0, 1], color="white")
+        ax.scatter(self.mep[-1, 0], self.mep[-1, 1], color="white")
+        ax.plot(self.mep[:, 0], self.mep[:, 1], color="white")
         return fig, ax, cbar
 
     def plot_mep_energy_profile(self, dpi=300):

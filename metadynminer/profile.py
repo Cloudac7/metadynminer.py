@@ -2,7 +2,10 @@ import numpy as np
 import pandas as pd
 
 from itertools import product
-from typing import List, Optional
+from typing import List, Optional, Union
+from matplotlib.colors import Colormap
+
+from miko.graph.plotting import canvas_style
 from metadynminer.hills import Hills
 from metadynminer.minima import Minima
 
@@ -114,12 +117,15 @@ class FEProfile:
 
     def plot(
         self,
-        name: str = "FEProfile.png",
+        png_name: str = None,
         image_size: List[int] = [10, 7],
         xlabel: Optional[str] = None,
         ylabel: Optional[str] = None,
+        time_unit: str = "ps",
+        energy_unit: str = "kJ/mol",
         label_size: int = 12,
-        cmap: str = "jet",
+        cmap: Union[str, Colormap] = "RdYlBu",
+        **kwargs
     ):
         """
         Visualization function for Free Energy Profile (FEP).
@@ -141,23 +147,34 @@ class FEProfile:
         import matplotlib.pyplot as plt
         import matplotlib.cm as cm
 
-        plt.figure(figsize=(image_size[0], image_size[1]))
+        canvas_style(**kwargs)
 
-        color_map = cm.get_cmap(cmap)
+        fig, ax = plt.subplots(figsize=(image_size[0], image_size[1]))
+
+        if type(cmap) == str:
+            cmap = cm.get_cmap(cmap)
 
         # colors = cm.jet((self.minima.iloc[:,1].to_numpy()).astype(float)/\
         #                (np.max(self.minima.iloc[:,1].to_numpy().astype(float))))
-        colors = color_map(np.linspace(0, 1, self.minima.shape[0]))
+        colors = cmap(np.linspace(0.15, 0.85, self.minima.shape[0]))
         for m in range(self.minima.shape[0]):
-            plt.plot(self.feprofile[:, 0],
-                     self.feprofile[:, m+1], color=colors[m])
+            ax.plot(
+                self.feprofile[:, 0],
+                self.feprofile[:, m+1], 
+                color=colors[m],
+                label=f"Minima {self.minima.iloc[m, 0]}",
+            )
+            
+        ax.legend()
 
         if xlabel == None:
-            plt.xlabel('time (ps)', size=label_size)
+            ax.set_xlabel(f'Time ({time_unit})')
         else:
-            plt.xlabel(xlabel, size=label_size)
+            ax.set_xlabel(xlabel)
         if ylabel == None:
-            plt.ylabel('free energy difference (kJ/mol)', size=label_size)
+            ax.set_ylabel(f'Free energy difference ({energy_unit})')
         else:
-            plt.ylabel(ylabel, size=label_size)
-        plt.savefig(name)
+            ax.set_ylabel(ylabel)
+        
+        if png_name != None:
+            fig.savefig(png_name)

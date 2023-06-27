@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 
 from metadynminer.hills import Hills
-from metadynminer.fes import Fes
+from metadynminer.fes import FES
 
 def read_hills(name, periodic, cv_per):
     return Hills(name, periodic=periodic, cv_per=cv_per)
@@ -25,7 +25,7 @@ def test_makefes(shared_datadir, name, periodic, cv_per, resolution):
     hills = read_hills(
         name=hill_name, periodic=periodic, cv_per=cv_per
     )
-    metadynminer = Fes(hills, resolution=resolution).fes.T
+    metadynminer = FES(hills, resolution=resolution).fes.T
 
     plumed_name = shared_datadir / f"plumed/{name}.dat"
     plumed = plumed_hills(plumed_name, len(periodic), resolution=resolution)
@@ -44,7 +44,7 @@ def test_makefes2(shared_datadir, name, periodic, cv_per, resolution):
     hills = read_hills(
         name=hill_name, periodic=periodic, cv_per=cv_per
     )
-    metadynminer = Fes(hills, resolution=resolution, original=True).fes.T
+    metadynminer = FES(hills, resolution=resolution, original=True).fes.T
     plumed_name = shared_datadir / f"plumed/{name}.dat"
     plumed = plumed_hills(plumed_name, len(periodic), resolution=resolution)
     assert np.mean(metadynminer) == pytest.approx(np.mean(plumed), abs=1e-3)
