@@ -94,7 +94,11 @@ class FES:
         self,
         resolution: Optional[int] = None,
         time_min: Optional[int] = None,
-        time_max: Optional[int] = None
+        time_max: Optional[int] = None,
+        reweighting: bool = False,
+        kb: float = 8.314e-3,
+        temp: float = 300.0,
+        bias_factor: float = 0.5
     ):
         """Function used internally for summing hills in Hills object with the fast Bias Sum Algorithm. 
 
@@ -142,6 +146,9 @@ class FES:
         gauss = -np.exp(exponent)
 
         fes = np.zeros([resolution] * cvs)
+        if reweighting is True:
+            self.e_beta_c = []
+
         for line in trange(len(cv_bins[0]), desc="Constructing FES"):
             # create a meshgrid of the indexes of the fes that need to be edited
             # size of the meshgrid is the same as the size of the gauss
@@ -166,6 +173,13 @@ class FES:
                 fes_index_to_edit[d] = np.mod(fes_index_to_edit[d], resolution)
             fes[tuple(fes_index_to_edit)] += gauss * \
                 local_mask * self.hills.heights[line]
+            
+            if reweighting is True:
+                self.e_beta_c.append(
+                    np.sum(np.exp(-fes / (kb * temp))) / \
+                         np.sum(np.exp(-fes / (kb * temp * bias_factor)))
+                )
+
         fes -= np.min(fes)
         self.fes = fes
         return fes
