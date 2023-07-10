@@ -1,8 +1,8 @@
-import sys
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+from copy import deepcopy
 from tqdm import tqdm, trange
 from typing import Optional, List, Union, Dict, Any
 from matplotlib.colors import Colormap
@@ -53,6 +53,7 @@ class FES:
         self.hills = hills
         self.periodic = hills.get_periodic()
         self.cv_name = hills.cv_name
+        self.generate_cv_map()
 
         if time_max != None:
             if time_max <= time_min:
@@ -74,8 +75,8 @@ class FES:
     def generate_cv_map(self):
         """generate CV map"""
 
-        cv_min = self.hills.cv_min
-        cv_max = self.hills.cv_max
+        cv_min = deepcopy(self.hills.cv_min)
+        cv_max = deepcopy(self.hills.cv_max)
         cv_range = cv_max - cv_min
 
         self.cv_range = cv_range
@@ -106,22 +107,26 @@ class FES:
 
         if resolution is None:
             resolution = self.res
-        self.generate_cv_map()
+
+        if time_min is None:
+            time_min = 0
+
+        if time_max is None:
+            time_max = len(self.hills.cv[:, 0])
+
+        cvs = self.cvs
 
         cv_min = self.cv_min
         cv_max = self.cv_max
         cv_fes_range = self.cv_fes_range
 
-        cv_bins = np.array([np.ceil(
-            (self.hills.cv[time_min:time_max, cv_index] -
-             cv_min[cv_index]) * resolution / cv_fes_range[cv_index]
-        ) for cv_index in range(self.cvs)])
-        cvs = self.cvs
-        cv_bins = cv_bins.astype(int)
+        cv_bins = np.ceil(
+            (self.hills.cv[time_min:time_max, :cvs] -
+             cv_min) * resolution / cv_fes_range
+        ).T.astype(int)
 
-        sigma = np.array([self.hills.sigma[cv_index][0]
-                         for cv_index in range(self.cvs)])
-        sigma_res = (sigma * self.res) / (cv_max - cv_min)
+        sigma = self.hills.sigma[:cvs, 0]
+        sigma_res = (sigma * resolution) / (cv_max - cv_min)
 
         gauss_res = np.max((8 * sigma_res).astype(int))
         if gauss_res % 2 == 0:
@@ -130,10 +135,10 @@ class FES:
         gauss_center_to_end = int((gauss_res - 1) / 2)
         gauss_center = gauss_center_to_end + 1
         grids = np.meshgrid(*[np.arange(gauss_res)] * cvs)
-        exponent = 0.
-        for i in range(len(sigma_res)):
-            i_diff = (grids[i] + 1) - gauss_center
-            exponent += -(i_diff ** 2) / (2 * sigma_res[i] ** 2)
+        exponent = np.sum(
+            -((grids[i] + 1 - gauss_center) ** 2) / (2 * sigma_res[i] ** 2)
+            for i in range(len(sigma_res))
+        )
         gauss = -np.exp(exponent)
 
         fes = np.zeros([resolution] * cvs)
@@ -161,7 +166,7 @@ class FES:
                 fes_index_to_edit[d] = np.mod(fes_index_to_edit[d], resolution)
             fes[tuple(fes_index_to_edit)] += gauss * \
                 local_mask * self.hills.heights[line]
-        fes = fes - np.min(fes)
+        fes -= np.min(fes)
         self.fes = fes
         return fes
 
@@ -184,19 +189,17 @@ class FES:
         if resolution is None:
             resolution = self.res
 
-        self.generate_cv_map()
         cv_min = self.cv_min
-        cv_max = self.cv_max
         cv_fes_range = self.cv_fes_range
 
         cvs = self.cvs
         fes = np.zeros([resolution] * cvs)
-        if time_min and time_max:
-            time_limit = time_max - time_min
-        else:
+
+        if time_min is None:
             time_min = 0
-            time_max = self.hills.cv[:, 0].shape[0]
-            time_limit = time_max - time_min
+        if time_max is None:
+            time_max = len(self.hills.cv[:, 0])
+        time_limit = time_max - time_min
 
         for index in tqdm(np.ndindex(fes.shape),  # type: ignore
                           desc="Constructing FES",
@@ -204,7 +207,7 @@ class FES:
             dp2_array = np.zeros([cvs, time_limit])
             for i, cv_idx in enumerate(range(cvs)):
                 dist_cv = \
-                    self.hills.cv[:, cv_idx] - \
+                    self.hills.cv[time_min:time_max, cv_idx] - \
                     (cv_min[i] + index[i] * cv_fes_range[i] / resolution)
                 if self.periodic[cv_idx]:
                     dist_cv[dist_cv < -0.5*cv_fes_range[i]] += cv_fes_range[i]
@@ -220,7 +223,7 @@ class FES:
                  1.00193418799744762399 - 0.00193418799744762399)
             fes[index] = -tmp.sum()
 
-        fes = fes - np.min(fes)
+        fes -= np.min(fes)
         self.fes = np.array(fes)
 
     def remove_cv(
@@ -256,7 +259,8 @@ class FES:
                 "FES not calculated yet. Use makefes() or makefes2() first.")
 
         if CV > self.hills.cvs:
-            raise ValueError("Error: The CV to remove is not available in this FES object.")
+            raise ValueError(
+                "Error: The CV to remove is not available in this FES object.")
 
         if kb == None:
             if energy_unit == "kJ/mol":
@@ -364,14 +368,14 @@ class FES:
         elif cvs == 2:
             if surface:
                 fig, ax = PlottingFES._surface_plot(
-                    self, 
+                    self,
                     cmap=cmap, image_size=image_size, dpi=dpi,
                     xlabel=xlabel, ylabel=ylabel,
                     energy_unit=energy_unit,
                     **surface_params, **kwargs
                 )
             fig, ax = PlottingFES._plot2d(
-                self, 
+                self,
                 levels=levels, cmap=cmap, image_size=image_size, dpi=dpi,
                 xlabel=xlabel, ylabel=ylabel, **kwargs
             )
