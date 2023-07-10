@@ -175,9 +175,10 @@ class FES:
                 local_mask * self.hills.heights[line]
             
             if reweighting is True:
+                local_fes = fes - np.min(fes)
                 self.e_beta_c.append(
-                    np.sum(np.exp(-fes / (kb * temp))) / \
-                         np.sum(np.exp(-fes / (kb * temp * bias_factor)))
+                    np.sum(np.exp(-local_fes / (kb * temp))) / \
+                         np.sum(np.exp(-local_fes / (kb * temp * bias_factor)))
                 )
 
         fes -= np.min(fes)
