@@ -160,11 +160,11 @@ class FEProfile:
         for m in range(self.minima.shape[0]):
             ax.plot(
                 self.feprofile[:, 0],
-                self.feprofile[:, m+1], 
+                self.feprofile[:, m+1],
                 color=colors[m],
                 label=f"Minima {self.minima.iloc[m, 0]}",
             )
-            
+
         ax.legend()
 
         if xlabel == None:
@@ -175,6 +175,6 @@ class FEProfile:
             ax.set_ylabel(f'Free energy difference ({energy_unit})')
         else:
             ax.set_ylabel(ylabel)
-        
+
         if png_name != None:
             fig.savefig(png_name)

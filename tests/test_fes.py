@@ -20,17 +20,19 @@ def plumed_hills(filename, cvs, resolution=256):
         # ("acealanme3d", [True,True,True], [[-np.pi, np.pi], [-np.pi, np.pi], [-np.pi, np.pi]], 64)
     ]
 )
-def test_makefes(shared_datadir, name, periodic, cv_per, resolution):
+def test_sum_bias(shared_datadir, name, periodic, cv_per, resolution):
     hill_name = shared_datadir / "hills" / name
     hills = read_hills(
         name=hill_name, periodic=periodic, cv_per=cv_per
     )
-    metadynminer = FES(hills, resolution=resolution).fes.T
+    fes = FES(hills, resolution=resolution)
+    _, fes_calc = fes.get_e_beta_c(resolution=resolution)
+    fes_calc = fes_calc.T
 
     plumed_name = shared_datadir / f"plumed/{name}.dat"
     plumed = plumed_hills(plumed_name, len(periodic), resolution=resolution)
-    assert np.mean(metadynminer) == pytest.approx(np.mean(plumed), abs=1)
-    assert np.allclose(metadynminer, plumed, atol=4)
+    assert np.mean(fes_calc) == pytest.approx(np.mean(plumed), abs=1)
+    assert np.allclose(fes_calc, plumed, atol=4)
 
 @pytest.mark.parametrize(
     "name, periodic, cv_per, resolution", [
@@ -39,13 +41,16 @@ def test_makefes(shared_datadir, name, periodic, cv_per, resolution):
         # ("acealanme3d", [True,True,True], [[-np.pi, np.pi], [-np.pi, np.pi], [-np.pi, np.pi]], 64)
     ]
 )
-def test_makefes2(shared_datadir, name, periodic, cv_per, resolution):
+def test_make_fes_original(shared_datadir, name, periodic, cv_per, resolution):
     hill_name = shared_datadir / "hills" / name
     hills = read_hills(
         name=hill_name, periodic=periodic, cv_per=cv_per
     )
-    metadynminer = FES(hills, resolution=resolution, original=True).fes.T
+    fes = FES(hills, resolution=resolution)
+    fes_calc = fes.make_fes_original(resolution=resolution)
+    fes_calc = fes_calc.T
+
     plumed_name = shared_datadir / f"plumed/{name}.dat"
     plumed = plumed_hills(plumed_name, len(periodic), resolution=resolution)
-    assert np.mean(metadynminer) == pytest.approx(np.mean(plumed), abs=1e-3)
-    assert np.allclose(metadynminer, plumed, atol=1e-2)
+    assert np.mean(fes_calc) == pytest.approx(np.mean(plumed), abs=1e-3)
+    assert np.allclose(fes_calc, plumed, atol=1e-2)

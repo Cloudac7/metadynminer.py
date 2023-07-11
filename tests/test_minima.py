@@ -15,6 +15,7 @@ def test_minima(shared_datadir):
         cv_per=[[-np.pi, np.pi], [-np.pi, np.pi]],
     )
     fes = FES(hills, resolution=256)
+    fes.make_fes_original(resolution=256)
     minima = Minima(fes)
     minima_df = minima.minima
     if type(minima_df) == pd.DataFrame:

@@ -1,14 +1,15 @@
 import numpy as np
+from joblib import Parallel, delayed
+
 import matplotlib.pyplot as plt
 import seaborn as sns
 
 from copy import deepcopy
-from tqdm import tqdm, trange
 from typing import Optional, List, Union, Dict, Any
 from matplotlib.colors import Colormap
 from metadynminer.hills import Hills
 
-from miko.graph.plotting import canvas_style, AxesInit, square_grid
+from miko.graph.plotting import canvas_style
 from miko.utils.log_factory import logger
 
 
@@ -23,14 +24,6 @@ class FES:
 
     Args:
         hills (Hills): The Hills object used for computing the free energy surface.
-        original (bool, optional): \
-            If False, the free energy surface will be calculated using a fast but approximate algorithm. \
-            If True, it will be calculated using a slower but exact algorithm \
-            (same as FES calculated with PLUMED `sum_hills` function). \
-            Defaults to False.
-        calculate_new_fes (bool, optional): \
-            If True, the free energy surface will be calculated to form `self.fes`. \
-            Defaults to True.
         resolution (int, optional): \
             The resolution of the free energy surface. Defaults to 256.
         time_min (int): The starting time step of simulation. Defaults to 0.
@@ -40,8 +33,6 @@ class FES:
     def __init__(
         self,
         hills: Hills,
-        original: bool = False,
-        calculate_new_fes: bool = True,
         resolution: int = 256,
         time_min: int = 0,
         time_max: Optional[int] = None
@@ -66,12 +57,6 @@ class FES:
                     "which will be used instead."
                 )
 
-        if calculate_new_fes:
-            if not original:
-                self.makefes(resolution, time_min, time_max)
-            else:
-                self.makefes2(resolution, time_min, time_max)
-
     def generate_cv_map(self):
         """generate CV map"""
 
@@ -90,23 +75,29 @@ class FES:
         self.cv_max = cv_max
         self.cv_fes_range = cv_fes_range
 
-    def makefes(
+    def get_e_beta_c(
         self,
         resolution: Optional[int] = None,
         time_min: Optional[int] = None,
         time_max: Optional[int] = None,
-        reweighting: bool = False,
         kb: float = 8.314e-3,
         temp: float = 300.0,
-        bias_factor: float = 0.5
+        bias_factor: float = 15.0
     ):
         """Function used internally for summing hills in Hills object with the fast Bias Sum Algorithm. 
+        From which could also be quick to get e_beta_c for reweighting.
 
         Args:
             resolution (int, optional): \
                 The resolution of the free energy surface. Defaults to 256.
             time_min (int): The starting time step of simulation. Defaults to 0.
             time_max (int, optional): The ending time step of simulation. Defaults to None.
+            reweighting (bool, optional): \
+                If True, the function of c(t) will be calculated and stored in `self.e_beta_c`.
+                Defaults to False.
+            kb (float, optional): The Boltzmann Constant in the energy unit. Defaults to 8.314e-3.
+            temp (float, optional): The temperature of the simulation in Kelvins. Defaults to 300.0.
+            bias_factor (float, optional): The bias factor used in the simulation. Defaults to 15.0.
         """
 
         if resolution is None:
@@ -146,50 +137,110 @@ class FES:
         gauss = -np.exp(exponent)
 
         fes = np.zeros([resolution] * cvs)
-        if reweighting is True:
-            self.e_beta_c = []
+        e_beta_c = []
 
-        for line in trange(len(cv_bins[0]), desc="Constructing FES"):
-            # create a meshgrid of the indexes of the fes that need to be edited
-            # size of the meshgrid is the same as the size of the gauss
-            fes_index_to_edit = np.meshgrid(
-                *([
-                    np.arange(gauss_res) - gauss_center
-                ] * len(cv_bins[:, line]))
-            )
-
-            # create a mask to avoid editing indexes outside the fes
-            local_mask = np.ones_like(gauss, dtype=int)
-            for d in range(cvs):
-                fes_index_to_edit[d] += cv_bins[d][line]
-                if not self.periodic[d]:
-                    mask = np.where(
-                        (fes_index_to_edit[d] < 0) + (
-                            fes_index_to_edit[d] > resolution - 1)
-                    )[0]
-                    # if the cv is not periodic, remove the indexes outside the fes
-                    local_mask[mask] = 0
-                # make sure the indexes are inside the fes
-                fes_index_to_edit[d] = np.mod(fes_index_to_edit[d], resolution)
-            fes[tuple(fes_index_to_edit)] += gauss * \
-                local_mask * self.hills.heights[line]
-            
-            if reweighting is True:
-                local_fes = fes - np.min(fes)
-                self.e_beta_c.append(
-                    np.sum(np.exp(-local_fes / (kb * temp))) / \
-                         np.sum(np.exp(-local_fes / (kb * temp * bias_factor)))
+        for line in range(len(cv_bins[0])):
+            fes_index_to_edit, delta_fes = \
+                self._sum_bias(
+                    gauss_res, gauss_center, gauss, cv_bins, line, cvs, resolution
                 )
+            fes[fes_index_to_edit] += delta_fes
 
+            local_fes = fes - np.min(fes)
+            e_beta_c.append(
+                np.sum(np.exp(-local_fes / (kb * temp))) /
+                np.sum(np.exp(-local_fes / (kb * temp * bias_factor)))
+            )
         fes -= np.min(fes)
-        self.fes = fes
-        return fes
+        return e_beta_c, fes
+    
+    def _sum_bias(
+        self, gauss_res, gauss_center, gauss, cv_bins, line, cvs, resolution
+    ):
+        # create a meshgrid of the indexes of the fes that need to be edited
+        # size of the meshgrid is the same as the size of the gauss
+        fes_index_to_edit = np.meshgrid(
+            *([
+                np.arange(gauss_res) - gauss_center
+            ] * len(cv_bins[:, line]))
+        )
 
-    def makefes2(
+        # create a mask to avoid editing indexes outside the fes
+        local_mask = np.ones_like(gauss, dtype=int)
+        for d in range(cvs):
+            fes_index_to_edit[d] += cv_bins[d][line]
+            if not self.periodic[d]:
+                mask = np.where(
+                    (fes_index_to_edit[d] < 0) + (
+                        fes_index_to_edit[d] > resolution - 1)
+                )[0]
+                # if the cv is not periodic, remove the indexes outside the fes
+                local_mask[mask] = 0
+            # make sure the indexes are inside the fes
+            fes_index_to_edit[d] = np.mod(fes_index_to_edit[d], resolution)
+        delta_fes = gauss * local_mask * self.hills.heights[line]
+        fes_index_to_edit = tuple(fes_index_to_edit)
+        return fes_index_to_edit, delta_fes
+
+    def reweighting(
+        self,
+        colvar_file: str,
+        e_beta_c: np.ndarray,
+        cv_indexes: Optional[List[int]] = None, 
+        resolution: int = 64,
+        kb: float = 8.314e-3,
+        temp: float = 300.0
+    ):
+        colvar = np.loadtxt(colvar_file)
+
+        if cv_indexes is None:
+            cvs = self.cvs
+            colvar_value = colvar[:, 1:cvs+1]
+        else:
+            cvs = len(cv_indexes)
+            colvar_value = np.vstack(
+                [colvar[:, i + 1] for i in cv_indexes]
+            ).T
+        cv_array = colvar_value - np.min(colvar_value, axis=0)
+        cv_range = np.max(cv_array)
+        cv_array = np.floor((resolution - 1) * cv_array / cv_range).astype(int)
+
+        bias = colvar[:, 9]
+        probs = np.zeros([resolution] * cvs)
+        reweighted_fes = np.zeros([len(e_beta_c)] + [resolution] * cvs)
+
+        for i in np.arange(len(e_beta_c)):
+            index = tuple(cv_array[i])
+            probs[index] += np.exp(bias[i]/(kb * temp)) / e_beta_c[i]
+            reweighted_fes[i] = -kb * temp * np.log(probs)
+
+        return reweighted_fes
+
+    def _calculate_dp2(self, index, time_min, time_max):
+        cv_min = self.cv_min
+        cv_fes_range = self.cv_fes_range
+        cvs = self.cvs
+
+        dp2 = np.zeros(time_max - time_min)
+        for i, cv_idx in enumerate(range(cvs)):
+            dist_cv = \
+                self.hills.cv[time_min:time_max, cv_idx] - \
+                (cv_min[i] + index[i] * cv_fes_range[i] / self.res)
+            if self.periodic[cv_idx]:
+                dist_cv[dist_cv < -0.5*cv_fes_range[i]] += cv_fes_range[i]
+                dist_cv[dist_cv > +0.5*cv_fes_range[i]] -= cv_fes_range[i]
+            dp2_local = dist_cv ** 2 / \
+                (2 * self.hills.sigma[cv_idx][0] ** 2)
+            dp2 += dp2_local
+
+        return dp2
+
+    def make_fes_original(
         self,
         resolution: Optional[int],
         time_min: Optional[int] = None,
-        time_max: Optional[int] = None
+        time_max: Optional[int] = None,
+        n_workers: int = 2
     ):
         """
         Function internally used to sum Hills in the same way as Plumed `sum_hills`. 
@@ -199,13 +250,11 @@ class FES:
                 The resolution of the free energy surface. Defaults to 256.
             time_min (int): The starting time step of simulation. Defaults to 0.
             time_max (int, optional): The ending time step of simulation. Defaults to None.
+            n_workers (int, optional): Number of workers for parallelization. Defaults to 2.
         """
 
         if resolution is None:
             resolution = self.res
-
-        cv_min = self.cv_min
-        cv_fes_range = self.cv_fes_range
 
         cvs = self.cvs
         fes = np.zeros([resolution] * cvs)
@@ -216,30 +265,25 @@ class FES:
             time_max = len(self.hills.cv[:, 0])
         time_limit = time_max - time_min
 
-        for index in tqdm(np.ndindex(fes.shape),  # type: ignore
-                          desc="Constructing FES",
-                          total=np.prod(fes.shape)):  # type: ignore
-            dp2_array = np.zeros([cvs, time_limit])
-            for i, cv_idx in enumerate(range(cvs)):
-                dist_cv = \
-                    self.hills.cv[time_min:time_max, cv_idx] - \
-                    (cv_min[i] + index[i] * cv_fes_range[i] / resolution)
-                if self.periodic[cv_idx]:
-                    dist_cv[dist_cv < -0.5*cv_fes_range[i]] += cv_fes_range[i]
-                    dist_cv[dist_cv > +0.5*cv_fes_range[i]] -= cv_fes_range[i]
-                dp2_local = dist_cv ** 2 / \
-                    (2 * self.hills.sigma[cv_idx][0] ** 2)
-                dp2_array[i] = dp2_local
-            dp2 = np.sum(dp2_array, axis=0)
+        def calculate_fes(index):
+            dp2 = self._calculate_dp2(index, time_min, time_max)
 
             tmp = np.zeros(time_limit)
             tmp[dp2 < 6.25] = self.hills.heights[dp2 < 6.25] * \
                 (np.exp(-dp2[dp2 < 6.25]) *
                  1.00193418799744762399 - 0.00193418799744762399)
-            fes[index] = -tmp.sum()
+            return index, -tmp.sum()
 
-        fes -= np.min(fes)
+        indices = list(np.ndindex(fes.shape))
+        results = Parallel(n_jobs=n_workers)(
+            delayed(calculate_fes)(index) for index in indices
+        )
+        if results is not None:
+            for index, value in results:
+                fes[index] = value
+            fes -= np.min(fes)
         self.fes = np.array(fes)
+        return fes
 
     def remove_cv(
         self,
